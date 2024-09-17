@@ -1,6 +1,74 @@
 from manim import *
 
 
+class StockPriceVisualizationV4(Scene):
+    def construct(self):
+        # Set the years (X) and stock prices (Y)
+        years = np.array([2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030])
+        min_years, max_years = years.min(), years.max()
+        stock_prices = np.array([100, 150, 125, 175, 150, 200, 175, 225, 200])
+        min_stock_price, max_stock_price = stock_prices.min(), stock_prices.max()
+
+        # Set the plot
+        ax = Axes(
+            x_range=(min_years, max_years, 2),
+            y_range=(min_stock_price, max_stock_price, 50),
+            axis_config={
+                "include_numbers": True,
+                "decimal_number_config": {
+                    "group_with_commas": False,
+                    "num_decimal_places": 0,
+                },
+            },
+        )
+        ax.center()
+
+        # Set the labels of the x-/y-axis
+        labels = ax.get_axis_labels(
+            x_label=Tex("Year").scale(1.0),
+            y_label=Tex("Stock Price").scale(1.0),
+        )
+
+        # Plot the line graph
+        f = ax.plot_line_graph(
+            x_values=years,
+            y_values=stock_prices,
+            line_color=BLUE,
+            add_vertex_dots=False,
+        )
+
+        # Get all points of the graph
+        points = f.get_all_points()
+
+        # Set up the dot pointer
+        tracker = ValueTracker()
+
+        dot = Dot()
+        dot.add_updater(
+            lambda d: d.move_to(
+                points[int(tracker.get_value()), :]
+            )
+        )
+        
+        decimal = DecimalNumber()
+        decimal.add_updater(
+            lambda d: d.next_to(
+                points[int(tracker.get_value()), :], UP, buff=1.0
+            )
+        )
+        decimal.add_updater(lambda d: d.set_value(ax.p2c(points[int(tracker.get_value())])[1]))
+
+        # Animate the axis/labels being drawn
+        self.play(Write(VGroup(ax, labels)))
+
+        # Add the graphs and dots
+        self.add(dot, decimal, tracker)
+
+        self.play(Create(f), tracker.animate.set_value(len(points)-1))
+    
+        self.wait()
+
+
 class StockPriceVisualizationV3(Scene):
     def construct(self):
         # Set the years (X) and stock prices (Y)
