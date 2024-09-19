@@ -11,10 +11,11 @@ if __name__ == "__main__":
     )
     df = preprocess_stock_data(df)
 
+    # Visualize stock data
     scene = StockVisualization(
         df,
         title="Apple",
-        visualize_live_stock_price=False,
-        visualize_live_date=False,
+        visualize_live_stock_price=True,
+        visualize_live_date=True,
     )
     scene.render()
