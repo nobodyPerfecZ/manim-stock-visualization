@@ -3,7 +3,7 @@ import pandas as pd
 
 
 def download_stock_data(
-    tickers: str,
+    ticker: str,
     start: str = "1900-01-01",
     end: str = "2100-01-01",
     rounding: bool = True,
@@ -12,7 +12,7 @@ def download_stock_data(
     Download stock data from Yahoo Finance.
 
     Args:
-        tickers (str):
+        ticker (str):
             The stock ticker to download
 
         start (str):
@@ -28,7 +28,7 @@ def download_stock_data(
         pd.DataFrame:
             The stock data as a DataFrame
     """
-    return yf.download(tickers=tickers, start=start, end=end, rounding=rounding)
+    return yf.download(tickers=ticker, start=start, end=end, rounding=rounding)
 
 
 def preprocess_stock_data(df: pd.DataFrame, column: str = "High") -> pd.DataFrame:
@@ -45,7 +45,7 @@ def preprocess_stock_data(df: pd.DataFrame, column: str = "High") -> pd.DataFram
     """
     return pd.DataFrame(
         {
-            "X": df.index.to_numpy(),
+            "X": df.index.to_numpy().astype("datetime64[D]").astype(str),
             "Y": df[column].to_numpy(),
         }
     )
