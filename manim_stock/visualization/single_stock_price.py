@@ -4,6 +4,7 @@ import logging
 
 import numpy as np
 from manim import (
+    DEFAULT_FONT_SIZE,
     GREEN,
     RED,
     RIGHT,
@@ -51,6 +52,15 @@ class SingleStockPriceVisualization(StockVisualization):
         y_label (str):
             The label of the y-axis
 
+        title_font_size (int):
+            The font size of the title
+
+        x_label_font_size (int):
+            The font size of the x-axis label
+
+        y_label_font_size (int):
+            The font size of the y-axis label
+
         background_run_time (int):
             The run time for the write animation of the background elements
 
@@ -78,6 +88,9 @@ class SingleStockPriceVisualization(StockVisualization):
         title: str,
         x_label: str = "Date [Year]",
         y_label: str = r"Stock Price [\$]",
+        title_font_size: int = DEFAULT_FONT_SIZE,
+        x_label_font_size: int = DEFAULT_FONT_SIZE,
+        y_label_font_size: int = DEFAULT_FONT_SIZE,
         background_run_time: int = 10,
         graph_run_time: int = 45,
         wait_run_time: int = 5,
@@ -106,6 +119,9 @@ class SingleStockPriceVisualization(StockVisualization):
             title=title,
             x_label=x_label,
             y_label=y_label,
+            title_font_size=title_font_size,
+            x_label_font_size=x_label_font_size,
+            y_label_font_size=y_label_font_size,
             **kwargs,
         )
         self.load_data()
@@ -173,12 +189,16 @@ class SingleStockPriceVisualization(StockVisualization):
         )
 
         # Create the title
-        title = Title(self.title, include_underline=False)
+        title = Title(
+            self.title,
+            font_size=self.title_font_size,
+            include_underline=False,
+        )
 
         # Create the x-/y-axis label
         labels = ax.get_axis_labels(
-            x_label=Tex(self.x_label),
-            y_label=Tex(self.y_label),
+            x_label=Tex(self.x_label, font_size=self.x_label_font_size),
+            y_label=Tex(self.y_label, font_size=self.y_label_font_size),
         )
 
         # Take a number of samples from the entire data

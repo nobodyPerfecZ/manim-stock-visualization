@@ -31,6 +31,15 @@ class StockVisualization(ABC, MovingCameraScene):
 
         y_label (str):
             The label of the y-axis
+        
+        title_font_size (int):
+            The font size of the title
+        
+        x_label_font_size (int):
+            The font size of the x-axis label
+        
+        y_label_font_size (int):
+            The font size of the y-axis label
     """
 
     def __init__(
@@ -41,8 +50,15 @@ class StockVisualization(ABC, MovingCameraScene):
         title: str,
         x_label: str,
         y_label: str,
+        title_font_size: int,
+        x_label_font_size: int,
+        y_label_font_size: int,
         **kwargs,
     ):
+        assert title_font_size > 0, "title_font_size must be greater than 0!"
+        assert x_label_font_size > 0, "x_label_font_size must be greater than 0!"
+        assert y_label_font_size > 0, "y_label_font_size must be greater than 0!"
+
         super().__init__(**kwargs)
 
         self.tickers = tickers
@@ -51,6 +67,9 @@ class StockVisualization(ABC, MovingCameraScene):
         self.title = title
         self.x_label = x_label
         self.y_label = y_label
+        self.title_font_size = title_font_size
+        self.x_label_font_size = x_label_font_size
+        self.y_label_font_size = y_label_font_size
 
     @abstractmethod
     def load_data(self):
