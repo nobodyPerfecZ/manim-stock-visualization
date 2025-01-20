@@ -1,21 +1,15 @@
-from manim_stock.visualization import StockVisualization
-from manim_stock.util import download_stock_data, preprocess_stock_data
+"""Example of visualizing the stock price of Apple using Manim Stock."""
+
+from manim_stock.visualization.single_stock_price import SingleStockPriceVisualization
 
 if __name__ == "__main__":
-    # Download and preprocess stock data
-    df = download_stock_data(
-        ticker="AAPL",
-        start="2014-01-01",
-        end="2024-01-01",
-        rounding=True,
-    )
-    df = preprocess_stock_data(df)
-
-    # Visualize stock data
-    scene = StockVisualization(
-        df,
+    scene = SingleStockPriceVisualization(
+        tickers="AAPL",
+        start="1900-01-01",
+        end="2100-01-01",
         title="Apple",
-        visualize_live_stock_price=True,
-        visualize_live_date=True,
+        background_run_time=10,
+        graph_run_time=45,
+        wait_run_time=5,
     )
     scene.render()
