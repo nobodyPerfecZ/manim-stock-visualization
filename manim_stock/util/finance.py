@@ -56,4 +56,4 @@ def preprocess_stock_data(df: pd.DataFrame, column: str = "High") -> pd.DataFram
     for i, idx in enumerate(multi_index):
         data[f"Y{i}"] = df[idx].to_numpy(dtype=float)
 
-    return pd.DataFrame(data)
+    return pd.DataFrame(data).dropna(inplace=False)

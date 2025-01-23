@@ -7,15 +7,13 @@ from manim import (
     DEFAULT_FONT_SIZE,
     GREEN,
     RED,
-    RIGHT,
-    UP,
+    UR,
     WHITE,
     Axes,
     Create,
     DecimalNumber,
     Dot,
     FadeOut,
-    Tex,
     Title,
     ValueTracker,
     VGroup,
@@ -29,9 +27,9 @@ from manim_stock.visualization.stock import StockVisualization
 logging.getLogger("manim").setLevel(logging.WARNING)
 
 
-class SingleStockPriceVisualization(StockVisualization):
+class Lineplot(StockVisualization):
     """
-    Visualization of stock prices over time for a single ticker.
+    Visualization of stock prices with line graphs for a single ticker.
 
     Attributes:
         tickers (str | list[str]):
@@ -85,9 +83,9 @@ class SingleStockPriceVisualization(StockVisualization):
         tickers: str | list[str],
         start: str,
         end: str,
-        title: str,
-        x_label: str = "Date [Year]",
-        y_label: str = r"Stock Price [\$]",
+        title: str = "Market Price",
+        x_label: str = "Year",
+        y_label: str = r"Price [\$]",
         title_font_size: int = DEFAULT_FONT_SIZE,
         x_label_font_size: int = DEFAULT_FONT_SIZE,
         y_label_font_size: int = DEFAULT_FONT_SIZE,
@@ -124,8 +122,6 @@ class SingleStockPriceVisualization(StockVisualization):
             y_label_font_size=y_label_font_size,
             **kwargs,
         )
-        self.load_data()
-        self.preprocess_data()
 
         self.background_run_time = background_run_time
         self.graph_run_time = graph_run_time
@@ -133,6 +129,9 @@ class SingleStockPriceVisualization(StockVisualization):
         self.camera_frame_scale = camera_frame_scale
         self.num_ticks = num_ticks
         self.num_samples = num_samples
+
+        self.load_data()
+        self.preprocess_data()
 
     def load_data(self):
         self.df = download_stock_data(
@@ -143,8 +142,15 @@ class SingleStockPriceVisualization(StockVisualization):
 
     def preprocess_data(self):
         self.df = preprocess_stock_data(df=self.df, column="High")
-        self.date = self.df["X"].to_numpy()
-        self.stock_price = self.df["Y0"].to_numpy()
+        sample_indices = np.linspace(
+            0,
+            len(self.df) - 1,
+            num=min(self.num_samples, len(self.df)),
+            endpoint=True,
+            dtype=int,
+        )
+        self.date = self.df["X"].to_numpy()[sample_indices]
+        self.stock_price = self.df["Y0"].to_numpy()[sample_indices]
 
     def construct(self):
         #  Scale the camera frame up by camera_frame_scale
@@ -159,9 +165,18 @@ class SingleStockPriceVisualization(StockVisualization):
                 self.stock_price.max() / self.num_ticks,
             ),
             tips=False,
-            y_axis_config={"include_numbers": False},
-            x_axis_config={"include_numbers": False},
+            y_axis_config={
+                "include_numbers": False,
+                "font_size": DEFAULT_FONT_SIZE,
+            },
+            x_axis_config={
+                "include_numbers": False,
+                "font_size": DEFAULT_FONT_SIZE,
+            },
         )
+
+        # Remove the x-axis labels
+        ax.x_axis.remove(ax.x_axis.numbers)
 
         # Create the x-axis labels
         x_tick_indices = [10.0] + ax.x_axis.get_tick_range().tolist()
@@ -175,6 +190,9 @@ class SingleStockPriceVisualization(StockVisualization):
                 for x_tick_idx, x_label in zip(x_tick_indices, x_labels)
             }
         )
+
+        # Remove the y-axis labels
+        ax.y_axis.remove(ax.y_axis.numbers)
 
         # Create the y-axis labels
         y_tick_indices = [10.0] + ax.y_axis.get_tick_range().tolist()
@@ -195,34 +213,26 @@ class SingleStockPriceVisualization(StockVisualization):
             include_underline=False,
         )
 
+        """
         # Create the x-/y-axis label
-        labels = ax.get_axis_labels(
-            x_label=Tex(self.x_label, font_size=self.x_label_font_size),
-            y_label=Tex(self.y_label, font_size=self.y_label_font_size),
+        # TODO: Fix issue with placing of x-axis/y-axis labels
+        x_label = ax.get_x_axis_label(
+            label=Tex(self.x_label, font_size=self.x_label_font_size),
+            edge=UR,
+            direction=UR,
         )
-
-        # Take a number of samples from the entire data
-        x_data_indices = np.linspace(
-            0,
-            len(self.date) - 1,
-            num=min(self.num_samples, len(self.date)),
-            endpoint=True,
-            dtype=int,
+        y_label = ax.get_y_axis_label(
+            label=Tex(self.y_label, font_size=self.y_label_font_size),
+            edge=UL,
+            direction=UL,
         )
-        y_data_indices = np.linspace(
-            0,
-            len(self.stock_price) - 1,
-            num=min(self.num_samples, len(self.stock_price)),
-            endpoint=True,
-            dtype=int,
-        )
-        x_data = x_data_indices
-        y_data = self.stock_price[y_data_indices]
+        labels = VGroup(x_label, y_label)
+        """
 
         # Plot the line graph
         f = ax.plot_line_graph(
-            x_values=x_data,
-            y_values=y_data,
+            x_values=np.arange(len(self.date)),
+            y_values=self.stock_price,
             line_color=GREEN if self.stock_price[-1] > self.stock_price[0] else RED,
             add_vertex_dots=False,
         )
@@ -240,14 +250,14 @@ class SingleStockPriceVisualization(StockVisualization):
         # Create the Stock Value Tracker
         stock_value = DecimalNumber()
         stock_value.add_updater(
-            lambda mob: mob.next_to(
-                points[int(x.get_value()), :], UP + RIGHT
-            ).set_value(ax.p2c(points[int(x.get_value())])[1])
+            lambda mob: mob.next_to(points[int(x.get_value()), :], UR).set_value(
+                ax.p2c(points[int(x.get_value())])[1]
+            )
         )
 
         # Play the animation
         self.play(
-            Write(VGroup(ax, labels, title, dot, stock_value)),
+            Write(VGroup(ax, title, dot, stock_value)),
             run_time=self.background_run_time,
         )
         self.play(

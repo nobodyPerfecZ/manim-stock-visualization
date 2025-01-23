@@ -31,13 +31,13 @@ class StockVisualization(ABC, MovingCameraScene):
 
         y_label (str):
             The label of the y-axis
-        
+
         title_font_size (int):
             The font size of the title
-        
+
         x_label_font_size (int):
             The font size of the x-axis label
-        
+
         y_label_font_size (int):
             The font size of the y-axis label
     """
