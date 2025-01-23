@@ -69,7 +69,7 @@ class Lineplot(StockVisualization):
 
         camera_frame_scale (float):
             The scale factor for the camera frame
-        
+
         graph_colors(list[str]):
             The colors for all graphs
 
@@ -95,32 +95,36 @@ class Lineplot(StockVisualization):
         graph_run_time: int = 45,
         wait_run_time: int = 5,
         camera_frame_scale: float = 1.2,
-        graph_colors: list[str] = [
-            "#003f5c",
-            "#58508d",
-            "#bc5090",
-            "#ff6361",
-            "#ffa600",
-        ],
+        graph_colors: list[str] = None,
         num_ticks: int = 5,
         num_samples: int = 1000,
         **kwargs,
     ):
         if isinstance(tickers, list):
             assert (
-                len(tickers) < 6
-            ), f"{self.__class__.__name__} only supports at most 5 tickers!"
+                len(tickers) < 4
+            ), f"{self.__class__.__name__} only supports at most 3 tickers!"
         else:
             tickers = [tickers]
-        assert len(graph_colors) >= len(
-            tickers
-        ), "graph_colors should have at least as many colors as tickers!"
         assert background_run_time > 0, "background_run_time should be greater than 0!"
         assert graph_run_time > 0, "graph_run_time should be greater than 0!"
         assert wait_run_time > 0, "wait_run_time should be greater than 0!"
         assert (
             camera_frame_scale > 0.0
         ), "camera_frame_scale should be greater than 0.0!"
+        if graph_colors is None:
+            graph_colors = [
+                "#003f5c",
+                "#58508d",
+                "#bc5090",
+                "#ff6361",
+                "#ffa600",
+            ]
+        else:
+            assert len(graph_colors) >= len(
+                tickers
+            ), "graph_colors should have at least as many colors as tickers!"
+
         assert num_ticks > 0, "num_ticks should be greater than 0!"
         assert num_samples > 0, "num_samples should be greater than 0!"
 

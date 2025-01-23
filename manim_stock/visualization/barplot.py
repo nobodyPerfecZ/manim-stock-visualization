@@ -58,15 +58,15 @@ class Barplot(StockVisualization):
         background_run_time (int):
             The run time for the write animation of the background elements
 
-        graph_run_time (int):
-            The run time for the create animation of the graph
+        bar_run_time (int):
+            The run time for the create animation of the bars
 
         wait_run_time (int):
             The run time for the fade out animation at the end
 
         camera_frame_scale (float):
             The scale factor for the camera frame
-        
+
         bar_colors(list[str]):
             The colors for all bars
 
@@ -98,16 +98,10 @@ class Barplot(StockVisualization):
         x_label_font_size: int = DEFAULT_FONT_SIZE,
         y_label_font_size: int = DEFAULT_FONT_SIZE,
         background_run_time: int = 10,
-        graph_run_time: int = 45,
+        bar_run_time: int = 45,
         wait_run_time: int = 5,
         camera_frame_scale: float = 1.2,
-        bar_colors: list[str] = [
-            "#003f5c",
-            "#58508d",
-            "#bc5090",
-            "#ff6361",
-            "#ffa600",
-        ],
+        bar_colors: list[str] = None,
         bar_width: float = 0.6,
         bar_fill_opacity: float = 0.7,
         bar_stroke_width: float = 3,
@@ -117,19 +111,28 @@ class Barplot(StockVisualization):
     ):
         if isinstance(tickers, list):
             assert (
-                isinstance(tickers, list) and len(tickers) < 6
-            ), f"{self.__class__.__name__} only supports at most 5 tickers!"
+                len(tickers) < 4
+            ), f"{self.__class__.__name__} only supports at most 3 tickers!"
         else:
             tickers = [tickers]
-        assert len(bar_colors) >= len(
-            tickers
-        ), "bar_colors should have at least as many colors as tickers!"
         assert background_run_time > 0, "background_run_time should be greater than 0!"
-        assert graph_run_time > 0, "graph_run_time should be greater than 0!"
+        assert bar_run_time > 0, "bar_run_time should be greater than 0!"
         assert wait_run_time > 0, "wait_run_time should be greater than 0!"
         assert (
             camera_frame_scale > 0.0
         ), "camera_frame_scale should be greater than 0.0!"
+        if bar_colors is None:
+            bar_colors = [
+                "#003f5c",
+                "#58508d",
+                "#bc5090",
+                "#ff6361",
+                "#ffa600",
+            ]
+        else:
+            assert len(bar_colors) >= len(
+                tickers
+            ), "bar_colors should have at least as many colors as tickers!"
         assert 0.0 <= bar_width <= 1.0, "bar_width should be in range (0.0, 1.0)!"
         assert (
             0.0 <= bar_fill_opacity <= 1.0
@@ -152,7 +155,7 @@ class Barplot(StockVisualization):
         )
 
         self.background_run_time = background_run_time
-        self.graph_run_time = graph_run_time
+        self.bar_run_time = bar_run_time
         self.wait_run_time = wait_run_time
         self.camera_frame_scale = camera_frame_scale
         self.bar_colors = bar_colors
@@ -285,6 +288,6 @@ class Barplot(StockVisualization):
         )
         self.play(
             x.animate.set_value(len(self.stock_prices) - 1),
-            run_time=self.graph_run_time,
+            run_time=self.bar_run_time,
         )
         self.play(FadeOut(*bar_labels), run_time=self.wait_run_time)
