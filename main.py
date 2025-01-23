@@ -4,7 +4,7 @@ from manim_stock.visualization.lineplot import Lineplot
 
 if __name__ == "__main__":
     scene = Lineplot(
-        tickers=["AAPL", "NVDA", "TSLA"],
+        tickers=["AAPL", "NVDA", "TSLA", "AMZN", "GOOGL"],
         start="1900-01-01",
         end="2100-01-01",
         title="Market Prices",
