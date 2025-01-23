@@ -66,6 +66,9 @@ class Barplot(StockVisualization):
 
         camera_frame_scale (float):
             The scale factor for the camera frame
+        
+        bar_colors(list[str]):
+            The colors for all bars
 
         bar_width (float):
             The width of the bars
@@ -98,6 +101,13 @@ class Barplot(StockVisualization):
         graph_run_time: int = 45,
         wait_run_time: int = 5,
         camera_frame_scale: float = 1.2,
+        bar_colors: list[str] = [
+            "#003f5c",
+            "#58508d",
+            "#bc5090",
+            "#ff6361",
+            "#ffa600",
+        ],
         bar_width: float = 0.6,
         bar_fill_opacity: float = 0.7,
         bar_stroke_width: float = 3,
@@ -111,6 +121,9 @@ class Barplot(StockVisualization):
             ), f"{self.__class__.__name__} only supports at most 5 tickers!"
         else:
             tickers = [tickers]
+        assert len(bar_colors) >= len(
+            tickers
+        ), "bar_colors should have at least as many colors as tickers!"
         assert background_run_time > 0, "background_run_time should be greater than 0!"
         assert graph_run_time > 0, "graph_run_time should be greater than 0!"
         assert wait_run_time > 0, "wait_run_time should be greater than 0!"
@@ -142,6 +155,7 @@ class Barplot(StockVisualization):
         self.graph_run_time = graph_run_time
         self.wait_run_time = wait_run_time
         self.camera_frame_scale = camera_frame_scale
+        self.bar_colors = bar_colors
         self.bar_width = bar_width
         self.bar_fill_opacity = bar_fill_opacity
         self.bar_stroke_width = bar_stroke_width
@@ -189,6 +203,7 @@ class Barplot(StockVisualization):
             ],
             y_length=round(config.frame_height) - 2,
             x_length=round(config.frame_width) - 2,
+            bar_colors=self.bar_colors,
             bar_width=self.bar_width,
             bar_fill_opacity=self.bar_fill_opacity,
             bar_stroke_width=self.bar_stroke_width,
@@ -228,22 +243,6 @@ class Barplot(StockVisualization):
             font_size=self.title_font_size,
             include_underline=False,
         )
-
-        """
-        # TODO: Fix issue with placing of x-axis/y-axis labels
-        # Create the x-/y-axis label
-        x_label = ax.get_x_axis_label(
-            label=Tex(self.x_label, font_size=self.x_label_font_size),
-            edge=UR,
-            direction=UR,
-        )
-        y_label = ax.get_y_axis_label(
-            label=Tex(self.y_label, font_size=self.y_label_font_size),
-            edge=UP,
-            direction=UP + 0.5 * LEFT,
-        )
-        labels = VGroup(x_label, y_label)
-        """
 
         # Create the Bar Labels
         bar_labels = [
