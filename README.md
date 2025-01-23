@@ -1,12 +1,43 @@
 # manim-stock-visualization 📈
 This repository contains code to visualize stock market prices with Manim Community Edition (manimCE).
 
-## Example Video 💻
-You can watch the full example video [here](docs/examples/visualization_apple.mp4), which visualizes the stock market prices of Apple from 2014-01-01 to 2024-01-01.
+## Example Videos 💻
+You can watch the full example videos [here](docs/examples).
 
-<p align="center"><img src="docs/examples/visualization_apple.gif" alt="Logo"></p>
+### Line Plot
+
+The line plot shows the stock market prices [\$] of Apple, NVIDIA and Tesla from 01.01.2010 to 01.01.2025.
+
+<p align="center"><img src="docs/examples/lineplot.gif" alt="Logo"></p>
+
+
+### Bar Plot
+The example video shows the stock market prices [\$] of Apple, NVIDIA and Tesla from 01.01.2010 to 01.01.2025.
+
+<p align="center"><img src="docs/examples/barplot.gif" alt="Logo"></p>
 
 ## Installation of manimCE ⚙️
+
+To use `manim-stock-visualization`, you need to install ManimCE on your system.
+Please follow the steps below to install manimCE.
+For other systems, please visit the [ManimCE installation guide](https://docs.manim.community/en/stable/installation/uv.html).
+
+### Linux (Debian-based)
+1. **Update your package list and install prerequisites:**
+```bash
+sudo apt update
+sudo apt install build-essential python3-dev libcairo2-dev libpango1.0-dev
+```
+2. **Installing LaTeX:**
+```bash
+sudo apt install texlive-full
+```
+3. **Installing manimCE:**
+```bash
+pip install manim
+```
+
+### Windows
 TODO:
 
 ## Development 🔧
