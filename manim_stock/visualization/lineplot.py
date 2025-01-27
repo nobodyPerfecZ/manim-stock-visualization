@@ -168,14 +168,16 @@ class Lineplot(StockVisualization):
             add_vertex_dots=False,
         )
         points = f.get_all_points()
-        dot = Dot(color=WHITE)
-        dot.add_updater(lambda mob: mob.move_to(points[int(x_tracker.get_value()), :]))
-        value_tracker = DecimalNumber(font_size=DEFAULT_FONT_SIZE)
+
+        dot = Dot(points[0], color=WHITE)
+        dot.add_updater(lambda mob: mob.move_to(points[int(x_tracker.get_value())]))
+
+        value_tracker = DecimalNumber(y[0], font_size=DEFAULT_FONT_SIZE)
+        value_tracker.add_updater(lambda mob: mob.next_to(dot, UR))
         value_tracker.add_updater(
-            lambda mob: mob.next_to(
-                points[int(x_tracker.get_value()), :], UR
-            ).set_value(ax.p2c(points[int(x_tracker.get_value())])[1])
+            lambda mob: mob.set_value(ax.p2c(points[int(x_tracker.get_value())])[1])
         )
+
         return f, dot, value_tracker
 
     def load_data(self):
