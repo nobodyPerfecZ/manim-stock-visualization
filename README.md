@@ -37,9 +37,6 @@ sudo apt install texlive-full
 pip install manim
 ```
 
-### Windows
-TODO:
-
 ## Development 🔧
 Contributions are welcome! Please fork the repository and submit a pull request. Make sure to follow the coding standards and write tests for any new features or bug fixes.
 
