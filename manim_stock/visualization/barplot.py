@@ -101,7 +101,7 @@ class Barplot(StockVisualization):
         bar_run_time: int = 45,
         wait_run_time: int = 5,
         camera_frame_scale: float = 1.2,
-        bar_colors: list[str] = None,
+        bar_colors: list[str] | None = None,
         bar_width: float = 0.6,
         bar_fill_opacity: float = 0.7,
         bar_stroke_width: float = 3,
@@ -128,7 +128,7 @@ class Barplot(StockVisualization):
                 "#bc5090",
                 "#ff6361",
                 "#ffa600",
-            ]
+            ][:len(tickers)]
         else:
             assert len(bar_colors) >= len(
                 tickers

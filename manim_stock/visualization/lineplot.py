@@ -95,7 +95,7 @@ class Lineplot(StockVisualization):
         graph_run_time: int = 45,
         wait_run_time: int = 5,
         camera_frame_scale: float = 1.2,
-        graph_colors: list[str] = None,
+        graph_colors: list[str] | None = None,
         num_ticks: int = 5,
         num_samples: int = 1000,
         **kwargs,
@@ -119,7 +119,7 @@ class Lineplot(StockVisualization):
                 "#bc5090",
                 "#ff6361",
                 "#ffa600",
-            ]
+            ][:len(tickers)]
         else:
             assert len(graph_colors) >= len(
                 tickers
