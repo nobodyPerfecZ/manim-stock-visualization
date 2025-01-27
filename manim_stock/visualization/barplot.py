@@ -16,7 +16,7 @@ from manim import (
     config,
 )
 
-from manim_stock.util import download_stock_data, preprocess_stock_data
+from manim_stock.util.finance import download_stock_data, preprocess_stock_data
 from manim_stock.visualization.stock import StockVisualization
 
 # Set logging level to WARNING

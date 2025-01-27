@@ -1,6 +1,6 @@
 """Example of visualizing the stock price of Apple, NVIDIA and Tesla."""
 
-from manim_stock.visualization.lineplot import Lineplot
+from manim_stock.visualization import Lineplot
 
 if __name__ == "__main__":
     scene = Lineplot(
