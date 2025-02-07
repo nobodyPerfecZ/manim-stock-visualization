@@ -9,9 +9,7 @@ class TestLineplot:
     def test_render(self):
         """Tests the render() method."""
         scene = Lineplot(
-            tickers=["AAPL", "NVDA", "TSLA"],
-            start="1900-01-01",
-            end="2100-01-01",
+            path="examples/data/stock_data.csv",
             background_run_time=1,
             graph_run_time=1,
             wait_run_time=1,

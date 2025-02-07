@@ -19,7 +19,6 @@ from manim import (
     config,
 )
 
-from manim_stock.util.finance import download_stock_data, preprocess_stock_data
 from manim_stock.visualization.stock import StockVisualization
 
 # Set logging level to WARNING
@@ -31,14 +30,8 @@ class Lineplot(StockVisualization):
     Visualization of stock prices with line graphs for multiple tickers.
 
     Attributes:
-        tickers (str | list[str]):
-            The ticker(s) of the stock(s) to visualize
-
-        start (str):
-            The start date in YYYY-MM-DD format
-
-        end (str):
-            The end date in YYYY-MM-DD format
+        path (str):
+            The path to the CSV file containing the stock data
 
         title (str):
             The title of the visualization
@@ -82,9 +75,7 @@ class Lineplot(StockVisualization):
 
     def __init__(
         self,
-        tickers: str | list[str],
-        start: str,
-        end: str,
+        path: str,
         title: str = "Market Price",
         x_label: str = "Year",
         y_label: str = r"Price [\$]",
@@ -100,12 +91,19 @@ class Lineplot(StockVisualization):
         num_samples: int = 1000,
         **kwargs,
     ):
-        if isinstance(tickers, list):
-            assert (
-                len(tickers) < 4
-            ), f"{self.__class__.__name__} only supports at most 3 tickers!"
-        else:
-            tickers = [tickers]
+        super().__init__(
+            path=path,
+            title=title,
+            x_label=x_label,
+            y_label=y_label,
+            title_font_size=title_font_size,
+            x_label_font_size=x_label_font_size,
+            y_label_font_size=y_label_font_size,
+            num_ticks=num_ticks,
+            num_samples=num_samples,
+            **kwargs,
+        )
+
         assert background_run_time > 0, "background_run_time should be greater than 0!"
         assert graph_run_time > 0, "graph_run_time should be greater than 0!"
         assert wait_run_time > 0, "wait_run_time should be greater than 0!"
@@ -119,27 +117,11 @@ class Lineplot(StockVisualization):
                 "#bc5090",
                 "#ff6361",
                 "#ffa600",
-            ][:len(tickers)]
+            ][: len(self.df.columns) - 1]
         else:
-            assert len(graph_colors) >= len(
-                tickers
+            assert (
+                len(graph_colors) >= len(self.df.columns) - 1
             ), "graph_colors should have at least as many colors as tickers!"
-
-        assert num_ticks > 0, "num_ticks should be greater than 0!"
-        assert num_samples > 0, "num_samples should be greater than 0!"
-
-        super().__init__(
-            tickers=tickers,
-            start=start,
-            end=end,
-            title=title,
-            x_label=x_label,
-            y_label=y_label,
-            title_font_size=title_font_size,
-            x_label_font_size=x_label_font_size,
-            y_label_font_size=y_label_font_size,
-            **kwargs,
-        )
 
         self.background_run_time = background_run_time
         self.graph_run_time = graph_run_time
@@ -147,10 +129,6 @@ class Lineplot(StockVisualization):
         self.camera_frame_scale = camera_frame_scale
         self.graph_colors = graph_colors
         self.num_ticks = num_ticks
-        self.num_samples = num_samples
-
-        self.load_data()
-        self.preprocess_data()
 
     def _create_line_graph_with_value_tracker(
         self,
@@ -180,39 +158,16 @@ class Lineplot(StockVisualization):
 
         return f, dot, value_tracker
 
-    def load_data(self):
-        self.df = download_stock_data(
-            tickers=self.tickers,
-            start=self.start,
-            end=self.end,
-        )
-
-    def preprocess_data(self):
-        self.df = preprocess_stock_data(df=self.df, column="High")
-        sample_indices = np.linspace(
-            0,
-            len(self.df) - 1,
-            num=min(self.num_samples, len(self.df)),
-            endpoint=True,
-            dtype=int,
-        )
-        self.date = self.df["X"].to_numpy()[sample_indices]
-        self.stock_prices = self.df[
-            [f"Y{i}" for i in range(len(self.tickers))]
-        ].to_numpy()[sample_indices]
-
     def construct(self):
         #  Scale the camera frame up by camera_frame_scale
         self.camera.frame.scale(self.camera_frame_scale)
 
         # Create the axes
+        x_range = [0, len(self.X), len(self.X) / self.num_ticks]
+        y_range = [0, self.Y.max(), self.Y.max() / self.num_ticks]
         ax = Axes(
-            x_range=(0, len(self.date), len(self.date) / self.num_ticks),
-            y_range=(
-                0,
-                self.stock_prices.max(),
-                self.stock_prices.max() / self.num_ticks,
-            ),
+            x_range=x_range,
+            y_range=y_range,
             y_length=round(config.frame_height) - 2,
             x_length=round(config.frame_width) - 2,
             tips=False,
@@ -230,12 +185,12 @@ class Lineplot(StockVisualization):
         x_tick_indices = [10.0] + ax.x_axis.get_tick_range().tolist()
         x_label_indices = np.linspace(
             0,
-            len(self.date) - 1,
+            len(self.X) - 1,
             num=self.num_ticks + 1,
             endpoint=True,
             dtype=int,
         )
-        x_labels = self.date[x_label_indices]
+        x_labels = self.X[x_label_indices]
         ax.x_axis.add_labels(
             {
                 x_tick_idx: int(x_label)
@@ -247,7 +202,7 @@ class Lineplot(StockVisualization):
         y_tick_indices = [10.0] + ax.y_axis.get_tick_range().tolist()
         y_labels = np.linspace(
             0,
-            self.stock_prices.max(),
+            self.Y.max(),
             num=self.num_ticks + 1,
             endpoint=True,
             dtype=int,
@@ -271,13 +226,13 @@ class Lineplot(StockVisualization):
 
         # Plot the line graph
         functions, animations, trackers = [], [], []
-        for i in range(len(self.tickers)):
+        for i in range(len(self.df.columns) - 1):
             f, dot, value_tracker = self._create_line_graph_with_value_tracker(
                 ax=ax,
                 x_tracker=x_tracker,
                 color=self.graph_colors[i],
-                x=self.date,
-                y=self.stock_prices[:, i],
+                x=self.X,
+                y=self.Y[:, i],
             )
             functions += [f]
             animations += [Create(f)]

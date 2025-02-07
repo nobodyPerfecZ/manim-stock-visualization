@@ -8,13 +8,13 @@ You can watch the full example videos [here](docs/examples).
 
 The line plot shows the stock market prices [\$] of Apple, NVIDIA and Tesla from 01.01.2010 to 01.01.2025.
 
-<p align="center"><img src="docs/examples/lineplot.gif" alt="Logo"></p>
+<p align="center"><img src="examples/docs/lineplot.gif" alt="Logo"></p>
 
 
 ### Bar Plot
 The example video shows the stock market prices [\$] of Apple, NVIDIA and Tesla from 01.01.2010 to 01.01.2025.
 
-<p align="center"><img src="docs/examples/barplot.gif" alt="Logo"></p>
+<p align="center"><img src="examples/docs/barplot.gif" alt="Logo"></p>
 
 ## Installation of manimCE ⚙️
 

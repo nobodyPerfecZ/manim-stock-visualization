@@ -16,7 +16,6 @@ from manim import (
     config,
 )
 
-from manim_stock.util.finance import download_stock_data, preprocess_stock_data
 from manim_stock.visualization.stock import StockVisualization
 
 # Set logging level to WARNING
@@ -28,14 +27,8 @@ class Barplot(StockVisualization):
     Visualization of stock prices with barplots for multiple tickers.
 
     Attributes:
-        tickers (str | list[str]):
-            The ticker(s) of the stock(s) to visualize
-
-        start (str):
-            The start date in YYYY-MM-DD format
-
-        end (str):
-            The end date in YYYY-MM-DD format
+        path (str):
+            The path to the CSV file containing the stock data
 
         title (str):
             The title of the visualization
@@ -88,9 +81,8 @@ class Barplot(StockVisualization):
 
     def __init__(
         self,
-        tickers: str | list[str],
-        start: str,
-        end: str,
+        path: str,
+        bar_names: str | list[str],
         title: str = "Market Price",
         x_label: str = "Stocks",
         y_label: str = r"Price [\$]",
@@ -109,12 +101,25 @@ class Barplot(StockVisualization):
         num_samples: int = 1000,
         **kwargs,
     ):
-        if isinstance(tickers, list):
-            assert (
-                len(tickers) < 4
-            ), f"{self.__class__.__name__} only supports at most 3 tickers!"
-        else:
-            tickers = [tickers]
+        super().__init__(
+            path=path,
+            title=title,
+            x_label=x_label,
+            y_label=y_label,
+            title_font_size=title_font_size,
+            x_label_font_size=x_label_font_size,
+            y_label_font_size=y_label_font_size,
+            num_ticks=num_ticks,
+            num_samples=num_samples,
+            **kwargs,
+        )
+
+        if isinstance(bar_names, str):
+            bar_names = [bar_names]
+
+        assert (
+            len(bar_names) == len(self.df.columns) - 1
+        ), "bar_names should have the same length as the number of tickers!"
         assert background_run_time > 0, "background_run_time should be greater than 0!"
         assert bar_run_time > 0, "bar_run_time should be greater than 0!"
         assert wait_run_time > 0, "wait_run_time should be greater than 0!"
@@ -128,32 +133,18 @@ class Barplot(StockVisualization):
                 "#bc5090",
                 "#ff6361",
                 "#ffa600",
-            ][:len(tickers)]
+            ][: len(self.df.columns) - 1]
         else:
             assert len(bar_colors) >= len(
-                tickers
+                self.df.columns - 1
             ), "bar_colors should have at least as many colors as tickers!"
         assert 0.0 <= bar_width <= 1.0, "bar_width should be in range (0.0, 1.0)!"
         assert (
             0.0 <= bar_fill_opacity <= 1.0
         ), "bar_fill_opacity should be in range (0.0, 1.0)!"
         assert bar_stroke_width > 0.0, "bar_stroke_width should be greater than 0.0!"
-        assert num_ticks > 0, "num_ticks should be greater than 0!"
-        assert num_samples > 0, "num_samples should be greater than 0!"
 
-        super().__init__(
-            tickers=tickers,
-            start=start,
-            end=end,
-            title=title,
-            x_label=x_label,
-            y_label=y_label,
-            title_font_size=title_font_size,
-            x_label_font_size=x_label_font_size,
-            y_label_font_size=y_label_font_size,
-            **kwargs,
-        )
-
+        self.bar_names = bar_names
         self.background_run_time = background_run_time
         self.bar_run_time = bar_run_time
         self.wait_run_time = wait_run_time
@@ -162,32 +153,6 @@ class Barplot(StockVisualization):
         self.bar_width = bar_width
         self.bar_fill_opacity = bar_fill_opacity
         self.bar_stroke_width = bar_stroke_width
-        self.num_ticks = num_ticks
-        self.num_samples = num_samples
-
-        self.load_data()
-        self.preprocess_data()
-
-    def load_data(self):
-        self.df = download_stock_data(
-            tickers=self.tickers,
-            start=self.start,
-            end=self.end,
-        )
-
-    def preprocess_data(self):
-        self.df = preprocess_stock_data(df=self.df, column="High")
-        sample_indices = np.linspace(
-            0,
-            len(self.df) - 1,
-            num=min(self.num_samples, len(self.df)),
-            endpoint=True,
-            dtype=int,
-        )
-        self.date = self.df["X"].to_numpy()[sample_indices]
-        self.stock_prices = self.df[
-            [f"Y{i}" for i in range(len(self.tickers))]
-        ].to_numpy()[sample_indices]
 
     def construct(self):
         #  Scale the camera frame up by camera_frame_scale
@@ -196,14 +161,11 @@ class Barplot(StockVisualization):
         x = ValueTracker(0)
 
         # Create the Bar Plot
+        y_range = [0, self.Y.max(), self.Y.max() / self.num_ticks]
         ax = BarChart(
-            values=self.stock_prices[0],
-            bar_names=self.tickers,
-            y_range=[
-                0,
-                self.stock_prices.max(),
-                self.stock_prices.max() / self.num_ticks,
-            ],
+            values=self.Y[0],
+            bar_names=self.bar_names,
+            y_range=y_range,
             y_length=round(config.frame_height) - 2,
             x_length=round(config.frame_width) - 2,
             bar_colors=self.bar_colors,
@@ -228,7 +190,7 @@ class Barplot(StockVisualization):
         y_tick_indices = [10.0] + ax.y_axis.get_tick_range().tolist()
         y_labels = np.linspace(
             0,
-            self.stock_prices.max(),
+            self.Y.max(),
             num=self.num_ticks + 1,
             endpoint=True,
             dtype=int,
@@ -254,9 +216,7 @@ class Barplot(StockVisualization):
         ]
 
         # Update Bar Plots
-        ax.add_updater(
-            lambda mob: mob.change_bar_values(self.stock_prices[int(x.get_value())])
-        )
+        ax.add_updater(lambda mob: mob.change_bar_values(self.Y[int(x.get_value())]))
 
         # Update Bar Labels
         # TODO: Change Hacky workaround to add different update functions to each bar label
@@ -287,7 +247,7 @@ class Barplot(StockVisualization):
             run_time=self.background_run_time,
         )
         self.play(
-            x.animate.set_value(len(self.stock_prices) - 1),
+            x.animate.set_value(len(self.Y) - 1),
             run_time=self.bar_run_time,
         )
         self.play(FadeOut(*bar_labels), run_time=self.wait_run_time)

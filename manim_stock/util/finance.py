@@ -33,7 +33,11 @@ def download_stock_data(
             The stock data as a DataFrame
     """
     return yf.download(
-        tickers=tickers, start=start, end=end, rounding=rounding, progress=False
+        tickers=tickers,
+        start=start,
+        end=end,
+        rounding=rounding,
+        progress=False,
     )
 
 

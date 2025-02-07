@@ -9,9 +9,8 @@ class TestBarplot:
     def test_render(self):
         """Tests the render() method."""
         scene = Barplot(
-            tickers=["AAPL", "NVDA", "TSLA"],
-            start="1900-01-01",
-            end="2100-01-01",
+            path="examples/data/stock_data.csv",
+            bar_names=["AAPLE", "NVIDIA", "TESLA"],
             background_run_time=1,
             bar_run_time=1,
             wait_run_time=1,
