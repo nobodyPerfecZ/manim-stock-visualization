@@ -29,14 +29,11 @@ class StockVisualization(ABC, MovingCameraScene):
         y_label (str):
             The label of the y-axis
 
-        title_font_size (int):
-            The font size of the title
+        camera_scale (float):
+            The scale factor for the camera frame
 
-        x_label_font_size (int):
-            The font size of the x-axis label
-
-        y_label_font_size (int):
-            The font size of the y-axis label
+        num_ticks (int):
+            The number of ticks on the x-/y-axis
 
         num_samples (int):
             The number of samples to use for the visualization
@@ -48,9 +45,10 @@ class StockVisualization(ABC, MovingCameraScene):
         title: str,
         x_label: str,
         y_label: str,
-        title_font_size: int,
-        x_label_font_size: int,
-        y_label_font_size: int,
+        background_run_time: float,
+        animation_run_time: float,
+        wait_run_time: float,
+        camera_scale: float,
         num_ticks: int,
         num_samples: int,
         **kwargs,
@@ -59,9 +57,14 @@ class StockVisualization(ABC, MovingCameraScene):
 
         assert os.path.exists(path), "path does not exist!"
         assert path.endswith(".csv"), "file must be a CSV file!"
-        assert title_font_size > 0, "title_font_size must be greater than 0!"
-        assert x_label_font_size > 0, "x_label_font_size must be greater than 0!"
-        assert y_label_font_size > 0, "y_label_font_size must be greater than 0!"
+        assert (
+            background_run_time > 0.0
+        ), "background_run_time should be greater than 0.0!"
+        assert (
+            animation_run_time > 0.0
+        ), "animation_run_time should be greater than 0.0!"
+        assert wait_run_time > 0.0, "wait_run_time should be greater than 0.0!"
+        assert camera_scale > 0.0, "camera_scale should be greater than 0.0!"
         assert num_ticks > 0, "num_ticks must be greater than 0!"
         assert num_samples > 0, "num_samples must be greater than 0!"
 
@@ -69,9 +72,10 @@ class StockVisualization(ABC, MovingCameraScene):
         self.title = title
         self.x_label = x_label
         self.y_label = y_label
-        self.title_font_size = title_font_size
-        self.x_label_font_size = x_label_font_size
-        self.y_label_font_size = y_label_font_size
+        self.background_run_time = background_run_time
+        self.animation_run_time = animation_run_time
+        self.wait_run_time = wait_run_time
+        self.camera_scale = camera_scale
         self.num_ticks = num_ticks
         self.num_samples = num_samples
 
@@ -93,6 +97,7 @@ class StockVisualization(ABC, MovingCameraScene):
         )
         self.df = self.df.iloc[sample_indices]
         self.X = self.df["X"].to_numpy()
+        self.X_indices = np.arange(len(self.X))
         self.Y = self.df[[f"Y{i}" for i in range(len(self.df.columns) - 1)]].to_numpy()
 
     @abstractmethod

@@ -3,6 +3,7 @@
 import logging
 from dataclasses import dataclass, replace
 
+import numpy as np
 from manim import BarChart, ReplacementTransform, VGroup, Write, config
 
 from manim_stock.util import (
@@ -69,10 +70,7 @@ class State:
         return replace(self, **kwargs)
 
     def barchart(
-        self,
-        bar_values: list[float],
-        bar_names: list[str],
-        bar_colors: list[str],
+        self, bar_values: list[float], bar_names: list[str], bar_colors: list[str]
     ) -> BarChart:
         """
         Returns an BarChart object with the specified x-/y-labels.
@@ -102,7 +100,7 @@ class State:
         return ax
 
 
-class Barplot(StockVisualization):
+class GrowingBarplot(StockVisualization):
     """
     Visualization of stock prices with barplots for multiple tickers.
 
@@ -196,16 +194,16 @@ class Barplot(StockVisualization):
 
         self.names = names
         self.colors = colors
+        self.next_indicies = int(self.num_samples / self.num_ticks)
 
     def construct(self):
         #  Scale the camera frame up by camera_frame_scale
         self.camera.frame.scale(self.camera_scale)
 
-        # Create the initial state
         state = State(
             y_min=0,
-            y_max=self.Y.max(),
-            num_y_ticks=self.num_ticks,
+            y_max=np.max(self.Y[3 * self.next_indicies]),
+            num_y_ticks=3,
         )
 
         # Create the title
@@ -214,18 +212,22 @@ class Barplot(StockVisualization):
         # Create the barchart
         ax = state.barchart(self.Y[0], self.names, self.colors)
 
-        # Animate the creation of the barchart and title
         self.play(
             Write(VGroup(ax, title)),
             run_time=self.background_run_time,
         )
 
-        # Incrementally change bar values
         for i in range(1, len(self.df)):
-            # Create new barchart
+            # Scale y-axis
+            if np.max(self.Y[i]) >= state.y_max:
+                if state.num_y_ticks < self.num_ticks:
+                    state = state.replace(num_y_ticks=state.num_y_ticks + 1)
+                state = state.replace(
+                    y_max=np.max(self.Y[: min(i + self.next_indicies, len(self.df)), :])
+                )
+
             new_ax = state.barchart(self.Y[i], self.names, self.colors)
 
-            # Animate bar value change
             self.play(
                 ReplacementTransform(ax, new_ax),
                 run_time=self.animation_run_time / len(self.df),
@@ -234,5 +236,4 @@ class Barplot(StockVisualization):
             # Update references for next iteration
             ax = new_ax
 
-        # Wait before finishing the animation
         self.wait(self.wait_run_time)

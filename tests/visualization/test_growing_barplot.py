@@ -1,15 +1,16 @@
-"""Tests for manim_stock/visualization/lineplot.py."""
+"""Tests for manim_stock/visualization/growing_barplot.py."""
 
-from manim_stock.visualization.lineplot import Lineplot
+from manim_stock.visualization.growing_barplot import GrowingBarplot
 
 
-class TestLineplot:
-    """Tests the Lineplot class."""
+class TestBarplot:
+    """Tests the Barplot class."""
 
     def test_render(self):
         """Tests the render() method."""
-        scene = Lineplot(
+        scene = GrowingBarplot(
             path="examples/data/stock_data.csv",
+            names=["AAPLE", "NVIDIA", "TESLA"],
             background_run_time=1,
             animation_run_time=1,
             wait_run_time=1,

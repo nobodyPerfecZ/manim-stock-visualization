@@ -10,9 +10,9 @@ class TestBarplot:
         """Tests the render() method."""
         scene = Barplot(
             path="examples/data/stock_data.csv",
-            bar_names=["AAPLE", "NVIDIA", "TESLA"],
+            names=["AAPLE", "NVIDIA", "TESLA"],
             background_run_time=1,
-            bar_run_time=1,
+            animation_run_time=1,
             wait_run_time=1,
             num_samples=10,
         )
