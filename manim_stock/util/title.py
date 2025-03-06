@@ -1,9 +1,14 @@
 from manim import Title
 
-from manim_stock.util.const import DEFAULT_FONT_SIZE
+from manim_stock.util.const import AXES_FONT_SIZE
 
 
-def create_title(title: str) -> Title:
+def create_title(
+    title: str,
+    font_size: float = AXES_FONT_SIZE,
+    include_underline: bool = False,
+    **kwargs,
+) -> Title:
     """
     Creates a Title object.
 
@@ -15,4 +20,9 @@ def create_title(title: str) -> Title:
         Title:
             A Title object.
     """
-    return Title(title, font_size=DEFAULT_FONT_SIZE, include_underline=False)
+    return Title(
+        title,
+        font_size=font_size,
+        include_underline=include_underline,
+        **kwargs,
+    )

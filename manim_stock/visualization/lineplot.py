@@ -2,24 +2,32 @@
 
 import logging
 from dataclasses import dataclass, replace
+from typing import List, Tuple
 
 import numpy as np
 from manim import (
-    DEFAULT_FONT_SIZE,
+    RIGHT,
     UR,
-    WHITE,
     Axes,
-    Create,
-    DecimalNumber,
     Dot,
     FadeOut,
-    ValueTracker,
+    ReplacementTransform,
+    Transform,
     VGroup,
+    VMobject,
     Write,
     config,
 )
 
-from manim_stock.util import create_axes, create_title, update_x_labels, update_y_labels
+from manim_stock.util import (
+    create_axes,
+    create_dot,
+    create_tex,
+    create_title,
+    next_to_tex,
+    update_x_labels,
+    update_y_labels,
+)
 from manim_stock.visualization.stock import StockVisualization
 
 # Set logging level to WARNING
@@ -110,7 +118,7 @@ class State:
 
     def points(
         self, ax: Axes, x_indices: np.ndarray, y: np.ndarray
-    ) -> list[tuple[float, float]]:
+    ) -> List[Tuple[float, float]]:
         """
         Returns the points on the graph corresponding to the x-/y-values.
 
@@ -125,59 +133,28 @@ class State:
                 The y-values of the data points.
 
         Returns:
-            list[tuple[float, float]]:
+            List[Tuple[float, float]]:
                 The points on the graph corresponding to the x-/y-values.
         """
         return [ax.c2p(x_indices[i], y[i]) for i in range(len(x_indices))]
 
+    def dots(self, points: List[Tuple[float, float]]) -> List[Dot]:
+        """
+        Returns a list of dots objects at the specified points.
+
+        Args:
+            points (List[Tuple[float, float]]):
+                The points to place the dots.
+
+        Returns:
+            List[Dot]:
+                The list of dots
+        """
+        return [create_dot(point) for point in points]
+
 
 class Lineplot(StockVisualization):
-    """
-    Visualization of stock prices with line graphs for multiple tickers.
-
-    Attributes:
-        path (str):
-            The path to the CSV file containing the stock data
-
-        title (str):
-            The title of the visualization
-
-        x_label (str):
-            The label of the x-axis
-
-        y_label (str):
-            The label of the y-axis
-
-        title_font_size (int):
-            The font size of the title
-
-        x_label_font_size (int):
-            The font size of the x-axis label
-
-        y_label_font_size (int):
-            The font size of the y-axis label
-
-        background_run_time (int):
-            The run time for the write animation of the background elements
-
-        animation_run_time (int):
-            The run time for the create animation of the graph
-
-        wait_run_time (int):
-            The run time for the fade out animation at the end
-
-        camera_scale (float):
-            The scale factor for the camera frame
-
-        graph_colors(list[str]):
-            The colors for all graphs
-
-        num_ticks (int):
-            The number of ticks on the x-/y-axis
-
-        num_samples (int):
-            The number of samples to draw from the entire data
-    """
+    """Visualization of stock prices with line graphs for multiple tickers."""
 
     def __init__(
         self,
@@ -189,7 +166,7 @@ class Lineplot(StockVisualization):
         animation_run_time: int = 50,
         wait_run_time: int = 5,
         camera_scale: float = 1.2,
-        colors: str | list[str] | None = None,
+        colors: str | List[str] | None = None,
         num_ticks: int = 6,
         num_samples: int = 100,
         **kwargs,
@@ -203,49 +180,11 @@ class Lineplot(StockVisualization):
             animation_run_time=animation_run_time,
             wait_run_time=wait_run_time,
             camera_scale=camera_scale,
+            colors=colors,
             num_ticks=num_ticks,
             num_samples=num_samples,
             **kwargs,
         )
-
-        if colors is None:
-            colors = [
-                "#003f5c",
-                "#58508d",
-                "#bc5090",
-                "#ff6361",
-                "#ffa600",
-            ][: len(self.df.columns) - 1]
-        elif isinstance(colors, str):
-            colors = [colors]
-
-        assert (
-            len(colors) >= len(self.df.columns) - 1
-        ), "colors should have at least as many colors as tickers!"
-
-        self.colors = colors
-
-    def _create_line_graph_with_value_tracker(
-        self,
-        ax: Axes,
-        x_tracker: ValueTracker,
-        color: str,
-        x: np.ndarray,
-        y: np.ndarray,
-    ):
-        """Creates a line graph including its dot and value tracker."""
-        f = ax.plot_line_graph(
-            x_values=np.arange(len(x)),
-            y_values=y,
-            line_color=color,
-            add_vertex_dots=False,
-        )
-        points = f.get_all_points()
-
-        dot = Dot(points[0], color=WHITE)
-        dot.add_updater(lambda mob: mob.move_to(points[int(x_tracker.get_value())]))
-
-        return f, dot
 
     def construct(self):
         #  Scale the camera frame up by camera_frame_scale
@@ -261,42 +200,82 @@ class Lineplot(StockVisualization):
             num_y_ticks=self.num_ticks,
         )
 
-        # Create the axes
-        ax = state.axes(self.X, self.Y)
-
         # Create the title
         title = create_title(self.title)
 
-        # Create the x position tracker
-        x_tracker = ValueTracker(0)
-
-        # Plot the line graph
-        graphs = [
-            ax.plot_line_graph(
-                x_values=self.X_indices,
-                y_values=self.Y[:, j],
-                line_color=self.colors[j],
-                add_vertex_dots=False,
-            )
-            for j in range(len(self.df.columns) - 1)
+        # Create the axes
+        ax = state.axes(self.X, np.max(self.Y, axis=-1))
+        points = [
+            state.points(ax, self.X_indices, self.Y[:, j])[:1]
+            for j in range(self.Y.shape[-1])
         ]
-        points = [graphs[j].get_all_points() for j in range(len(self.df.columns) - 1)]
-        dots = [Dot(points[j][0], radius=0.02) for j in range(len(self.df.columns) - 1)]
-        for j in range(len(self.df.columns) - 1):
-            dots[j].add_updater(lambda mob: mob.move_to(points[j][int(x_tracker.get_value())]))
-        animations = [Create(graphs[j]) for j in range(len(self.df.columns) - 1)]
+        graphs = [
+            VMobject(color=self.colors[j]).set_points_as_corners(points[j])
+            for j in range(self.Y.shape[-1])
+        ]
+        dots = [state.dots(points[j]) for j in range(self.Y.shape[-1])]
+        graph_names = [
+            next_to_tex(
+                tex=create_tex(self.names[j], color=self.colors[j]),
+                mobject_or_point=state.points(ax, self.X_indices, self.Y[:, j])[0],
+                direction=UR,
+            )
+            for j in range(self.Y.shape[-1])
+        ]
+        graph_values = [
+            next_to_tex(
+                tex=create_tex(np.round(self.Y[0, j], 2), color=self.colors[j]),
+                mobject_or_point=state.points(ax, self.X_indices, self.Y[:, j])[0],
+                direction=RIGHT,
+            )
+            for j in range(self.Y.shape[-1])
+        ]
 
-        # Play the animation
         self.play(
-            Write(VGroup(ax, title, *dots)),
+            Write(VGroup(ax, title, *graphs, *dots, *graph_names, *graph_values)),
             run_time=self.background_run_time,
         )
+
+        for i in range(1, len(self.df)):
+            new_points = [
+                state.points(ax, self.X_indices, self.Y[:, j])[: i + 1]
+                for j in range(self.Y.shape[-1])
+            ]
+            new_graphs = [
+                VMobject(color=self.colors[j]).set_points_as_corners(new_points[j])
+                for j in range(self.Y.shape[-1])
+            ]
+            new_dots = [state.dots(new_points[j]) for j in range(self.Y.shape[-1])]
+            new_graph_names = [
+                next_to_tex(
+                    tex=create_tex(self.names[j], color=self.colors[j]),
+                    mobject_or_point=state.points(ax, self.X_indices, self.Y[:, j])[i],
+                    direction=UR,
+                )
+                for j in range(self.Y.shape[-1])
+            ]
+            new_graph_values = [
+                next_to_tex(
+                    tex=create_tex(np.round(self.Y[i, j], 2), color=self.colors[j]),
+                    mobject_or_point=state.points(ax, self.X_indices, self.Y[:, j])[i],
+                    direction=RIGHT,
+                )
+                for j in range(self.Y.shape[-1])
+            ]
+            self.play(
+                Transform(VGroup(*graphs), VGroup(*new_graphs)),
+                ReplacementTransform(VGroup(*dots), VGroup(*new_dots)),
+                ReplacementTransform(VGroup(*graph_names), VGroup(*new_graph_names)),
+                ReplacementTransform(VGroup(*graph_values), VGroup(*new_graph_values)),
+                run_time=self.animation_run_time / len(self.df),
+            )
+
+            points = new_points
+            dots = new_dots
+            graph_names = new_graph_names
+            graph_values = new_graph_values
+
         self.play(
-            *animations,
-            x_tracker.animate.set_value(len(self.df) - 1),
-            run_time=self.animation_run_time,
-        )
-        self.play(
-            FadeOut(VGroup(*dots)),
+            FadeOut(VGroup(*dots, *graph_names, *graph_values)),
             run_time=self.wait_run_time,
         )

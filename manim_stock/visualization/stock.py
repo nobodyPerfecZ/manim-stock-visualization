@@ -3,6 +3,7 @@
 import logging
 import os
 from abc import ABC, abstractmethod
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -29,8 +30,20 @@ class StockVisualization(ABC, MovingCameraScene):
         y_label (str):
             The label of the y-axis
 
+        background_run_time (int):
+            The run time for the write animation of the background elements
+
+        animation_run_time (int):
+            The run time for the create animation of the graph
+
+        wait_run_time (int):
+            The run time for the fade out animation at the end
+
         camera_scale (float):
             The scale factor for the camera frame
+
+        colors(str | List[str]):
+            The colors for all graphs
 
         num_ticks (int):
             The number of ticks on the x-/y-axis
@@ -42,15 +55,16 @@ class StockVisualization(ABC, MovingCameraScene):
     def __init__(
         self,
         path: str,
-        title: str,
-        x_label: str,
-        y_label: str,
-        background_run_time: float,
-        animation_run_time: float,
-        wait_run_time: float,
-        camera_scale: float,
-        num_ticks: int,
-        num_samples: int,
+        title: str = "Market Price",
+        x_label: str = "Year",
+        y_label: str = r"Price [\$]",
+        background_run_time: int = 5,
+        animation_run_time: int = 50,
+        wait_run_time: int = 5,
+        camera_scale: float = 1.2,
+        colors: str | List[str] | None = None,
+        num_ticks: int = 6,
+        num_samples: int = 100,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -82,6 +96,23 @@ class StockVisualization(ABC, MovingCameraScene):
         self.load_data()
         self.preprocess_data()
 
+        if colors is None:
+            colors = [
+                "#003f5c",
+                "#58508d",
+                "#bc5090",
+                "#ff6361",
+                "#ffa600",
+            ][: self.Y.shape[-1]]
+        elif isinstance(colors, str):
+            colors = [colors]
+
+        assert (
+            len(colors) == self.Y.shape[-1]
+        ), "colors should have the same length as the number of tickers!"
+
+        self.colors = colors
+
     def load_data(self):
         """Load the stock data."""
         self.df = pd.read_csv(self.path)
@@ -96,9 +127,10 @@ class StockVisualization(ABC, MovingCameraScene):
             dtype=int,
         )
         self.df = self.df.iloc[sample_indices]
-        self.X = self.df["X"].to_numpy()
+        self.X = self.df[self.df.columns[0]].to_numpy()
         self.X_indices = np.arange(len(self.X))
-        self.Y = self.df[[f"Y{i}" for i in range(len(self.df.columns) - 1)]].to_numpy()
+        self.Y = self.df[self.df.columns[1:]].to_numpy()
+        self.names = self.df.columns[1:]
 
     @abstractmethod
     def construct(self):

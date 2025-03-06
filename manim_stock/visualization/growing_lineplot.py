@@ -2,9 +2,12 @@
 
 import logging
 from dataclasses import dataclass, replace
+from typing import List, Tuple
 
 import numpy as np
 from manim import (
+    RIGHT,
+    UR,
     Axes,
     Dot,
     FadeOut,
@@ -16,8 +19,14 @@ from manim import (
     config,
 )
 
-from manim_stock.util import create_axes, update_x_labels, update_y_labels
-from manim_stock.util.title import create_title
+from manim_stock.util import (
+    create_axes,
+    create_dot,
+    create_tex,
+    next_to_tex,
+    update_x_labels,
+    update_y_labels,
+)
 from manim_stock.visualization.stock import StockVisualization
 
 # Set logging level to WARNING
@@ -108,7 +117,7 @@ class State:
 
     def points(
         self, ax: Axes, x_indices: np.ndarray, y: np.ndarray
-    ) -> list[tuple[float, float]]:
+    ) -> List[Tuple[float, float]]:
         """
         Returns the points on the graph corresponding to the x-/y-values.
 
@@ -123,50 +132,28 @@ class State:
                 The y-values of the data points.
 
         Returns:
-            list[tuple[float, float]]:
+            List[Tuple[float, float]]:
                 The points on the graph corresponding to the x-/y-values.
         """
         return [ax.c2p(x_indices[i], y[i]) for i in range(len(x_indices))]
 
+    def dots(self, points: List[Tuple[float, float]]) -> List[Dot]:
+        """
+        Returns a list of dots objects at the specified points.
+
+        Args:
+            points (List[Tuple[float, float]]):
+                The points to place the dots.
+
+        Returns:
+            List[Dot]:
+                The list of dots
+        """
+        return [create_dot(point) for point in points]
+
 
 class GrowingLineplot(StockVisualization):
-    """
-    A class to visualize the growth of a line plot over time.
-
-    Attributes:
-        path (str):
-            The path to the CSV file containing the stock data
-
-        title (str):
-            The title of the visualization
-
-        x_label (str):
-            The label of the x-axis
-
-        y_label (str):
-            The label of the y-axis
-
-        background_run_time (int):
-            The run time for the write animation of the background elements
-
-        animation_run_time (int):
-            The run time for the create animation of the graph
-
-        wait_run_time (int):
-            The run time for the fade out animation at the end
-
-        camera_scale (float):
-            The scale factor for the camera frame
-
-        colors(str | list[str] | None):
-            The colors for all graphs
-
-        num_ticks (int):
-            The number of maximum ticks on the x-/y-axis
-
-        num_samples (int):
-            The number of samples to draw from the entire data
-    """
+    """Visualization of stock prices with line graphs for multiple tickers."""
 
     def __init__(
         self,
@@ -174,11 +161,11 @@ class GrowingLineplot(StockVisualization):
         title: str = "Market Price",
         x_label: str = "Year",
         y_label: str = r"Price [\$]",
-        background_run_time: int = 10,
-        animation_run_time: int = 45,
+        background_run_time: int = 5,
+        animation_run_time: int = 50,
         wait_run_time: int = 5,
         camera_scale: float = 1.2,
-        colors: str | list[str] | None = None,
+        colors: str | List[str] | None = None,
         num_ticks: int = 6,
         num_samples: int = 100,
         **kwargs,
@@ -192,26 +179,11 @@ class GrowingLineplot(StockVisualization):
             animation_run_time=animation_run_time,
             wait_run_time=wait_run_time,
             camera_scale=camera_scale,
+            colors=colors,
             num_ticks=num_ticks,
             num_samples=num_samples,
             **kwargs,
         )
-
-        if colors is None:
-            colors = [
-                "#003f5c",
-                "#58508d",
-                "#bc5090",
-                "#ff6361",
-                "#ffa600",
-            ][: self.Y.shape[-1]]
-        elif isinstance(colors, str):
-            colors = [colors]
-        assert (
-            len(colors) >= self.Y.shape[-1]
-        ), "colors should have at least as many colors as tickers!"
-
-        self.colors = colors
         self.next_indicies = int(self.num_samples / self.num_ticks)
 
     def construct(self):
@@ -228,28 +200,37 @@ class GrowingLineplot(StockVisualization):
             num_y_ticks=3,
         )
 
-        # Create the title
-        title = create_title(self.title)
-
         # Create the axes, data points, graphs and dots
         ax = state.axes(self.X, np.max(self.Y, axis=-1))
         points = [
             state.points(ax, self.X_indices, self.Y[:, j])[:1]
-            for j in range(len(self.df.columns) - 1)
+            for j in range(self.Y.shape[-1])
         ]
         graphs = [
             VMobject(color=self.colors[j]).set_points_as_corners(points[j])
-            for j in range(len(self.df.columns) - 1)
+            for j in range(self.Y.shape[-1])
         ]
-        dots = [
-            Dot(point, radius=0.02)
-            for j in range(len(self.df.columns) - 1)
-            for point in points[j]
+        dots = [state.dots(points[j]) for j in range(self.Y.shape[-1])]
+        graph_names = [
+            next_to_tex(
+                tex=create_tex(self.names[j], color=self.colors[j]),
+                mobject_or_point=points[j][-1],
+                direction=UR,
+            )
+            for j in range(self.Y.shape[-1])
+        ]
+        graph_values = [
+            next_to_tex(
+                tex=create_tex(np.round(self.Y[0, j], 2), color=self.colors[j]),
+                mobject_or_point=points[j][-1],
+                direction=RIGHT,
+            )
+            for j in range(self.Y.shape[-1])
         ]
 
         # Animate the creation of the axes, title, graph and dots
         self.play(
-            Write(VGroup(ax, title, *graphs, *dots)),
+            Write(VGroup(ax, *graphs, *dots, *graph_names, *graph_values)),
             run_time=self.background_run_time,
         )
 
@@ -277,16 +258,28 @@ class GrowingLineplot(StockVisualization):
             new_ax = state.axes(self.X, np.max(self.Y, axis=-1))
             new_points = [
                 state.points(new_ax, self.X_indices, self.Y[:, j])[: i + 1]
-                for j in range(len(self.df.columns) - 1)
+                for j in range(self.Y.shape[-1])
             ]
             new_graphs = [
                 VMobject(color=self.colors[j]).set_points_as_corners(new_points[j])
-                for j in range(len(self.df.columns) - 1)
+                for j in range(self.Y.shape[-1])
             ]
-            new_dots = [
-                Dot(point, radius=0.02)
-                for j in range(len(self.df.columns) - 1)
-                for point in new_points[j]
+            new_dots = [state.dots(new_points[j]) for j in range(self.Y.shape[-1])]
+            new_graph_names = [
+                next_to_tex(
+                    tex=create_tex(self.names[j], color=self.colors[j]),
+                    mobject_or_point=new_points[j][-1],
+                    direction=UR,
+                )
+                for j in range(self.Y.shape[-1])
+            ]
+            new_graph_values = [
+                next_to_tex(
+                    tex=create_tex(np.round(self.Y[i, j], 2), color=self.colors[j]),
+                    mobject_or_point=new_points[j][-1],
+                    direction=RIGHT,
+                )
+                for j in range(self.Y.shape[-1])
             ]
 
             # Animate graph growth and axis scaling
@@ -294,6 +287,8 @@ class GrowingLineplot(StockVisualization):
                 ReplacementTransform(ax, new_ax),
                 Transform(VGroup(*graphs), VGroup(*new_graphs)),
                 ReplacementTransform(VGroup(*dots), VGroup(*new_dots)),
+                ReplacementTransform(VGroup(*graph_names), VGroup(*new_graph_names)),
+                ReplacementTransform(VGroup(*graph_values), VGroup(*new_graph_values)),
                 run_time=self.animation_run_time / len(self.df),
             )
 
@@ -301,9 +296,11 @@ class GrowingLineplot(StockVisualization):
             ax = new_ax
             points = new_points
             dots = new_dots
+            graph_names = new_graph_names
+            graph_values = new_graph_values
 
         # Remove the dots from the graph before finishing the animation
         self.play(
-            FadeOut(VGroup(*dots)),
+            FadeOut(VGroup(*dots, *graph_names, *graph_values)),
             run_time=self.wait_run_time,
         )

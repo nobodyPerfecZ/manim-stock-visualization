@@ -59,7 +59,7 @@ def test_preprocess_stock_data_with_single_ticker():
     index = list(df.columns)
 
     assert df.shape == (1006, 2)
-    assert index == ["X", "Y0"]
+    assert index == ["Year", "AAPL"]
 
 
 def test_preprocess_stock_data_with_multiple_tickers():
@@ -73,4 +73,4 @@ def test_preprocess_stock_data_with_multiple_tickers():
     index = list(df.columns)
 
     assert df.shape == (1006, 3)
-    assert index == ["X", "Y0", "Y1"]
+    assert index == ["Year", "AAPL", "NVDA"]

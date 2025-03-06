@@ -1,13 +1,14 @@
 """Utility functions for downloading and preprocessing stock data."""
 
 import itertools
+from typing import List
 
 import pandas as pd
 import yfinance as yf
 
 
 def download_stock_data(
-    tickers: str | list[str],
+    tickers: str | List[str],
     start: str = "1900-01-01",
     end: str = "2100-01-01",
     rounding: bool = True,
@@ -16,7 +17,7 @@ def download_stock_data(
     Download stock data from Yahoo Finance.
 
     Args:
-        ticker (str | list[str]):
+        ticker (str | List[str]):
             The stock ticker to download
 
         start (str):
@@ -56,8 +57,8 @@ def preprocess_stock_data(df: pd.DataFrame, column: str = "High") -> pd.DataFram
     levels = [[column], list(df.columns.levels[1])]
     multi_index = list(itertools.product(*levels))
 
-    data = {"X": df.index.strftime("%Y").to_numpy(dtype=int)}
-    for i, idx in enumerate(multi_index):
-        data[f"Y{i}"] = df[idx].to_numpy(dtype=float)
+    data = {"Year": df.index.strftime("%Y").to_numpy(dtype=int)}
+    for column, ticker in multi_index:
+        data[ticker] = df[(column, ticker)].to_numpy(dtype=float)
 
     return pd.DataFrame(data).dropna(inplace=False)

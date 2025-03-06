@@ -1,20 +1,22 @@
 """Utility functions for Axes objects."""
 
+from typing import List
+
 import numpy as np
 from manim import Axes, config
 
-from manim_stock.util.const import DEFAULT_FONT_SIZE
+from manim_stock.util.const import AXES_FONT_SIZE
 
 
-def create_axes(x_range: list[float], y_range: list[float]) -> Axes:
+def create_axes(x_range: List[float], y_range: List[float]) -> Axes:
     """
     Creates an Axes object.
 
     Args:
-        x_range (list[float]):
+        x_range (List[float]):
             The [x_min, x_max, x_step] of the x-axis.
 
-        y_range (list[float]):
+        y_range (List[float]):
             The [y_min, y_max, y_step] of the y-axis.
 
     Returns:
@@ -29,11 +31,11 @@ def create_axes(x_range: list[float], y_range: list[float]) -> Axes:
         tips=False,
         y_axis_config={
             "include_numbers": False,
-            "font_size": DEFAULT_FONT_SIZE,
+            "font_size": AXES_FONT_SIZE,
         },
         x_axis_config={
             "include_numbers": False,
-            "font_size": DEFAULT_FONT_SIZE,
+            "font_size": AXES_FONT_SIZE,
         },
     )
 

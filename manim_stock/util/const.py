@@ -1,3 +1,5 @@
 """Constants for the design of the plots."""
 
-DEFAULT_FONT_SIZE = 38
+AXES_FONT_SIZE = 38
+LABEL_FONT_SIZE = 32
+DOT_RADIUS = 0.02
