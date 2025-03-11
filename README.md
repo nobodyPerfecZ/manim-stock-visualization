@@ -1,4 +1,21 @@
-# manim-stock-visualization 📈
+<div align="middle">
+    <h1>
+        📈 Manim Stock Visualization
+        <br>
+        <a href="https://github.com/psf/black">
+            <img src="https://img.shields.io/badge/code%20style-black-000000.svg">
+        </a>
+        <a>
+            <img src="https://img.shields.io/badge/python-3.10-blue">
+        </a>
+        <a>
+            <img src="https://img.shields.io/badge/tests-passed-brightgreen">
+        </a>
+        <a>
+            <img src="https://img.shields.io/badge/coverage-95%25-brightgreen">
+        </a>
+    </h1>
+</div>
 
 This repository contains code to visualize stock market prices with Manim Community Edition (manimCE).
 

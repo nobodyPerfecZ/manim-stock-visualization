@@ -3,7 +3,7 @@
 from manim_stock.util import download_stock_data, preprocess_stock_data
 
 if __name__ == "__main__":
-   # Download stock data
+    # Download stock data
     df = download_stock_data(
         tickers=["AAPL", "NVDA", "TSLA"],
         start="1900-01-01",

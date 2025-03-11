@@ -1,6 +1,6 @@
 """Utility functions for Axes objects."""
 
-from typing import List
+from typing import Tuple
 
 import numpy as np
 from manim import Axes, config
@@ -8,15 +8,18 @@ from manim import Axes, config
 from manim_stock.util.const import AXES_FONT_SIZE
 
 
-def create_axes(x_range: List[float], y_range: List[float]) -> Axes:
+def create_axes(
+    x_range: Tuple[float, float, float],
+    y_range: Tuple[float, float, float],
+) -> Axes:
     """
     Creates an Axes object.
 
     Args:
-        x_range (List[float]):
+        x_range (Tuple[float, float, float]):
             The [x_min, x_max, x_step] of the x-axis.
 
-        y_range (List[float]):
+        y_range (Tuple[float, float, float]):
             The [y_min, y_max, y_step] of the y-axis.
 
     Returns:
@@ -56,7 +59,7 @@ def remove_x_labels(ax: Axes):
 
 def add_x_labels(
     ax: Axes,
-    X: np.ndarray,
+    x: np.ndarray,
     x_min: float,
     x_max: float,
     num_x_ticks: int,
@@ -68,7 +71,7 @@ def add_x_labels(
         ax (Axes):
             The Axes object.
 
-        X (np.ndarray):
+        x (np.ndarray):
             The data points of the x-axis.
 
         x_min (float):
@@ -88,7 +91,7 @@ def add_x_labels(
         endpoint=True,
         dtype=int,
     )[1:]
-    x_labels = X[x_label_indices]
+    x_labels = x[x_label_indices]
     ax.x_axis.add_labels(
         {
             x_tick_idx: int(x_label)
@@ -99,7 +102,7 @@ def add_x_labels(
 
 def update_x_labels(
     ax: Axes,
-    X: np.ndarray,
+    x: np.ndarray,
     x_min: float,
     x_max: float,
     num_x_ticks: int,
@@ -111,7 +114,7 @@ def update_x_labels(
         ax (Axes):
             The Axes object.
 
-        X (np.ndarray):
+        x (np.ndarray):
             The data points of the x-axis.
 
         x_min (float):
@@ -124,7 +127,7 @@ def update_x_labels(
             The number of x-axis ticks.
     """
     remove_x_labels(ax)
-    add_x_labels(ax, X, x_min, x_max, num_x_ticks)
+    add_x_labels(ax, x, x_min, x_max, num_x_ticks)
 
 
 def remove_y_labels(ax: Axes):
@@ -143,7 +146,7 @@ def remove_y_labels(ax: Axes):
 
 def add_y_labels(
     ax: Axes,
-    Y: np.ndarray,
+    y: np.ndarray,
     y_min: float,
     y_max: float,
     num_y_ticks: int,
@@ -183,7 +186,7 @@ def add_y_labels(
 
 def update_y_labels(
     ax: Axes,
-    Y: np.ndarray,
+    y: np.ndarray,
     y_min: float,
     y_max: float,
     num_y_ticks: int,
@@ -195,7 +198,7 @@ def update_y_labels(
         ax (Axes):
             The Axes object.
 
-        Y (np.ndarray):
+        y (np.ndarray):
             The data points of the y-axis.
 
         y_min (float):
@@ -208,4 +211,4 @@ def update_y_labels(
             The number of y-axis ticks.
     """
     remove_y_labels(ax)
-    add_y_labels(ax, Y, y_min, y_max, num_y_ticks)
+    add_y_labels(ax, y, y_min, y_max, num_y_ticks)
