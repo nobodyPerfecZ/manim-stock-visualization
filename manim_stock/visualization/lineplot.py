@@ -51,6 +51,9 @@ class State:
         num_x_ticks (int):
             The number of ticks on the x-axis.
 
+        x_round (bool):
+            Whether to use non-decimal numbers for the x-axis labels.
+
         y_min (float):
             The minimum value of the y-axis.
 
@@ -59,14 +62,19 @@ class State:
 
         num_y_ticks (int):
             The number of ticks on the y-axis.
+
+        y_round (bool):
+            Whether to use non-decimal numbers for the y-axis labels.
     """
 
     x_min: float
     x_max: float
     num_x_ticks: int
+    x_round: bool
     y_min: float
     y_max: float
     num_y_ticks: int
+    y_round: bool
 
     @property
     def x_tick(self) -> float:
@@ -111,8 +119,8 @@ class State:
             x_range=[self.x_min, self.x_max, self.x_tick],
             y_range=[self.y_min, self.y_max, self.y_tick],
         )
-        update_x_labels(ax, x, self.x_min, self.x_max, self.num_x_ticks)
-        update_y_labels(ax, y, self.y_min, self.y_max, self.num_y_ticks)
+        update_x_labels(ax, x, self.x_min, self.x_max, self.num_x_ticks, self.x_round)
+        update_y_labels(ax, y, self.y_min, self.y_max, self.num_y_ticks, self.y_round)
         return ax
 
     def points(
@@ -168,6 +176,8 @@ class Lineplot(StockVisualization):
         colors: str | List[str] | None = None,
         num_ticks: int = 6,
         num_samples: int = 100,
+        x_round: bool = True,
+        y_round: bool = False,
         **kwargs,
     ):
         super().__init__(
@@ -182,6 +192,8 @@ class Lineplot(StockVisualization):
             colors=colors,
             num_ticks=num_ticks,
             num_samples=num_samples,
+            x_round=x_round,
+            y_round=y_round,
             **kwargs,
         )
 
@@ -194,9 +206,11 @@ class Lineplot(StockVisualization):
             x_min=0,
             x_max=self.X_indices.max(),
             num_x_ticks=self.num_ticks,
+            x_round=self.x_round,
             y_min=0,
             y_max=self.Y.max(),
             num_y_ticks=self.num_ticks,
+            y_round=self.y_round,
         )
 
         # Create the axes

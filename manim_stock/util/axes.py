@@ -63,6 +63,7 @@ def add_x_labels(
     x_min: float,
     x_max: float,
     num_x_ticks: int,
+    x_round: bool = False,
 ):
     """
     Add x-axis labels to an Axes object.
@@ -82,6 +83,9 @@ def add_x_labels(
 
         num_x_ticks (int):
             The number of x-axis ticks.
+
+        x_round (bool):
+            Whether to use non-decimal numbers for the x-axis labels.
     """
     x_tick_indices = ax.x_axis.get_tick_range().tolist()
     x_label_indices = np.linspace(
@@ -92,6 +96,10 @@ def add_x_labels(
         dtype=int,
     )[1:]
     x_labels = x[x_label_indices]
+    if x_round:
+        x_labels = x_labels.astype(np.int32)
+    else:
+        x_labels = np.round(x_labels, 2)
     ax.x_axis.add_labels(
         {
             x_tick_idx: int(x_label)
@@ -106,6 +114,7 @@ def update_x_labels(
     x_min: float,
     x_max: float,
     num_x_ticks: int,
+    x_round: bool = False,
 ):
     """
     Remove old and add new x-axis labels to an Axes object.
@@ -125,9 +134,12 @@ def update_x_labels(
 
         num_x_ticks (int):
             The number of x-axis ticks.
+
+        round (bool):
+            Whether to use non-decimal numbers for the x-axis labels.
     """
     remove_x_labels(ax)
-    add_x_labels(ax, x, x_min, x_max, num_x_ticks)
+    add_x_labels(ax, x, x_min, x_max, num_x_ticks, x_round)
 
 
 def remove_y_labels(ax: Axes):
@@ -150,6 +162,7 @@ def add_y_labels(
     y_min: float,
     y_max: float,
     num_y_ticks: int,
+    y_round: bool = False,
 ):
     """
     Add y-axis labels to an Axes object.
@@ -169,6 +182,9 @@ def add_y_labels(
 
         num_y_ticks (int):
             The number of y-axis ticks.
+
+        y_round (bool):
+            Whether to use non-decimal numbers for the y-axis labels.
     """
     y_tick_indices = ax.y_axis.get_tick_range().tolist()
     y_labels = np.linspace(
@@ -178,7 +194,10 @@ def add_y_labels(
         endpoint=True,
         dtype=float,
     )[1:]
-    y_labels = np.round(y_labels, decimals=2)
+    if y_round:
+        y_labels = y_labels.astype(np.int32)
+    else:
+        y_labels = np.round(y_labels, 2)
     ax.y_axis.add_labels(
         {y_tick_idx: y_label for y_tick_idx, y_label in zip(y_tick_indices, y_labels)}
     )
@@ -190,6 +209,7 @@ def update_y_labels(
     y_min: float,
     y_max: float,
     num_y_ticks: int,
+    y_round: bool = False,
 ):
     """
     Remove old and add new x-axis labels to an Axes object.
@@ -209,6 +229,9 @@ def update_y_labels(
 
         num_y_ticks (int):
             The number of y-axis ticks.
+
+        y_round (bool):
+            Whether to use non-decimal numbers for the y-axis labels.
     """
     remove_y_labels(ax)
-    add_y_labels(ax, y, y_min, y_max, num_y_ticks)
+    add_y_labels(ax, y, y_min, y_max, num_y_ticks, y_round)

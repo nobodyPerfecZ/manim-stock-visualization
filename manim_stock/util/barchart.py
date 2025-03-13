@@ -125,7 +125,13 @@ def remove_bar_values(ax: BarChart):
         ax.y_axis.remove(ax.y_axis.numbers)
 
 
-def add_bar_values(ax: BarChart, y_min: float, y_max: float, num_y_ticks: int):
+def add_bar_values(
+    ax: BarChart,
+    y_min: float,
+    y_max: float,
+    num_y_ticks: int,
+    y_round: bool = False,
+):
     """
     Add new y-axis labels to a BarChart object.
 
@@ -141,6 +147,9 @@ def add_bar_values(ax: BarChart, y_min: float, y_max: float, num_y_ticks: int):
 
         num_y_ticks (int):
             The number of y-axis ticks.
+
+        y_round (bool):
+            Whether to use non-decimal numbers for the y-axis labels.
     """
     y_tick_indices = ax.y_axis.get_tick_range().tolist()
     y_labels = np.linspace(
@@ -150,13 +159,22 @@ def add_bar_values(ax: BarChart, y_min: float, y_max: float, num_y_ticks: int):
         endpoint=True,
         dtype=float,
     )[1:]
-    y_labels = np.round(y_labels, decimals=2)
+    if y_round:
+        y_labels = y_labels.astype(np.int32)
+    else:
+        y_labels = np.round(y_labels, decimals=2)
     ax.y_axis.add_labels(
         {y_tick_idx: y_label for y_tick_idx, y_label in zip(y_tick_indices, y_labels)}
     )
 
 
-def update_bar_values(ax: BarChart, y_min: float, y_max: float, num_y_ticks: int):
+def update_bar_values(
+    ax: BarChart,
+    y_min: float,
+    y_max: float,
+    num_y_ticks: int,
+    y_round: bool = False,
+):
     """
     Remove old and add new y-axis labels to an BarChart object.
 
@@ -172,6 +190,9 @@ def update_bar_values(ax: BarChart, y_min: float, y_max: float, num_y_ticks: int
 
         num_y_ticks (int):
             The number of y-axis ticks.
+
+        y_round (bool):
+            Whether to use non-decimal numbers for the y-axis
     """
     remove_bar_values(ax)
-    add_bar_values(ax, y_min, y_max, num_y_ticks)
+    add_bar_values(ax, y_min, y_max, num_y_ticks, y_round)

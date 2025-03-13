@@ -55,11 +55,15 @@ class State:
 
         num_y_ticks (int):
             The number of ticks on the y-axis.
+        
+        y_round (bool):
+            Whether to use non-decimal numbers for the y-axis labels.
     """
 
     y_min: float
     y_max: float
     num_y_ticks: int
+    y_round: bool
 
     @property
     def y_tick(self) -> float:
@@ -110,7 +114,7 @@ class State:
             bar_colors=bar_colors,
         )
         remove_bar_names(ax)
-        update_bar_values(ax, self.y_min, self.y_max, self.num_y_ticks)
+        update_bar_values(ax, self.y_min, self.y_max, self.num_y_ticks, self.y_round)
         return ax
 
 
@@ -130,6 +134,8 @@ class Barplot(StockVisualization):
         colors: str | List[str] | None = None,
         num_ticks: int = 6,
         num_samples: int = 100,
+        x_round: bool = True,
+        y_round: bool = False,
         **kwargs,
     ):
         super().__init__(
@@ -144,6 +150,8 @@ class Barplot(StockVisualization):
             colors=colors,
             num_ticks=num_ticks,
             num_samples=num_samples,
+            x_round=x_round,
+            y_round=y_round,
             **kwargs,
         )
 
@@ -156,6 +164,7 @@ class Barplot(StockVisualization):
             y_min=0,
             y_max=self.Y.max(),
             num_y_ticks=self.num_ticks,
+            y_round=self.y_round,
         )
 
         # Create the barchart

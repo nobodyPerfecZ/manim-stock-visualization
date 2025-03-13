@@ -50,6 +50,12 @@ class StockVisualization(ABC, MovingCameraScene):
 
         num_samples (int):
             The number of samples to use for the visualization
+
+        x_round (bool):
+            Whether to use non-decimal numbers for the x-axis labels.
+
+        y_round (bool):
+            Whether to use non-decimal numbers for the y-axis labels.
     """
 
     def __init__(
@@ -65,6 +71,8 @@ class StockVisualization(ABC, MovingCameraScene):
         colors: str | List[str] | None = None,
         num_ticks: int = 6,
         num_samples: int = 100,
+        x_round: bool = True,
+        y_round: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -92,6 +100,8 @@ class StockVisualization(ABC, MovingCameraScene):
         self.camera_scale = camera_scale
         self.num_ticks = num_ticks
         self.num_samples = num_samples
+        self.x_round = x_round
+        self.y_round = y_round
 
         self.load_data()
         self.preprocess_data()
