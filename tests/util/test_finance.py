@@ -2,7 +2,13 @@
 
 import itertools
 
-from manim_stock.util import download_stock_data, preprocess_stock_data
+import numpy as np
+
+from manim_stock.util import (
+    download_stock_data,
+    preprocess_portfolio_value,
+    preprocess_stock_data,
+)
 
 
 def test_download_stock_data_with_single_ticker():
@@ -74,3 +80,39 @@ def test_preprocess_stock_data_with_multiple_tickers():
 
     assert df.shape == (1006, 3)
     assert index == ["Year", "AAPL", "NVDA"]
+
+
+def test_preprocess_portfolio_value_with_single_ticker():
+    """Tests the preprocess_portfolio_value() method for a single ticker."""
+    df = download_stock_data(
+        tickers=["AAPL"],
+        start="2020-01-01",
+        end="2024-01-01",
+    )
+    df = preprocess_stock_data(df, column="High")
+    df = preprocess_portfolio_value(df, 10000)
+    index = list(df.columns)
+
+    assert df.shape == (1006, 2)
+    assert index == ["Year", "AAPL"]
+    np.allclose(df["AAPL"].iloc[0], 10000)
+    np.allclose(df["AAPL"].iloc[-1], 26551.250343500964)
+
+
+def test_preprocess_portfolio_value_with_multiple_ticker():
+    """Tests the preprocess_portfolio_value() method for multiple tickers."""
+    df = download_stock_data(
+        tickers=["AAPL", "NVDA"],
+        start="2020-01-01",
+        end="2024-01-01",
+    )
+    df = preprocess_stock_data(df, column="High")
+    df = preprocess_portfolio_value(df, 10000)
+    index = list(df.columns)
+
+    assert df.shape == (1006, 3)
+    assert index == ["Year", "AAPL", "NVDA"]
+    np.allclose(df["AAPL"].iloc[0], 10000)
+    np.allclose(df["NVDA"].iloc[0], 10000)
+    np.allclose(df["AAPL"].iloc[-1], 26551.250343500964)
+    np.allclose(df["NVDA"].iloc[-1], 83718.59296482411)

@@ -62,3 +62,26 @@ def preprocess_stock_data(df: pd.DataFrame, column: str = "High") -> pd.DataFram
         data[ticker] = df[(column, ticker)].to_numpy(dtype=float)
 
     return pd.DataFrame(data).dropna(inplace=False)
+
+
+def preprocess_portfolio_value(
+    df: pd.DataFrame,
+    init_cash: float = 10000,
+) -> pd.DataFrame:
+    """
+    Converts stock prices into portfolio value over time.
+
+    Args:
+        df (pd.DataFrame):
+            The stock data as a DataFrame
+
+        init_cash (float):
+            The initial cash to invest
+
+    Returns:
+        pd.DataFrame:
+            The preprocessed stock data
+    """
+    shares = init_cash / df[df.columns[1:]].iloc[0]
+    df[df.columns[1:]] = shares * df[df.columns[1:]]
+    return df

@@ -20,7 +20,11 @@ from manim_stock.util.barchart import (
 )
 from manim_stock.util.const import AXES_FONT_SIZE, DOT_RADIUS, LABEL_FONT_SIZE
 from manim_stock.util.dot import create_dot
-from manim_stock.util.finance import download_stock_data, preprocess_stock_data
+from manim_stock.util.finance import (
+    download_stock_data,
+    preprocess_portfolio_value,
+    preprocess_stock_data,
+)
 from manim_stock.util.tex import create_tex, next_to_tex
 from manim_stock.util.title import create_title
 
@@ -39,6 +43,7 @@ __all__ = [
     "create_title",
     "download_stock_data",
     "next_to_tex",
+    "preprocess_portfolio_value",
     "preprocess_stock_data",
     "remove_bar_names",
     "remove_bar_values",

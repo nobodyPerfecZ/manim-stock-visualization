@@ -40,6 +40,9 @@ df = download_stock_data(
 # Preprocess stock data
 df = preprocess_stock_data(df, column="High")
 
+# (Optional:) Convert stock price to portfolio value given an initial cashflow
+df = preprocess_portfolio_value(df, init_cash=10000)
+
 # Safe stock data as CSV file
 df.to_csv("stock_data.csv", index=False)
 ```
