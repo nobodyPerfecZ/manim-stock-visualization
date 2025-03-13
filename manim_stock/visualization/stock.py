@@ -98,11 +98,11 @@ class StockVisualization(ABC, MovingCameraScene):
 
         if colors is None:
             colors = [
-                "#003f5c",
-                "#58508d",
-                "#bc5090",
-                "#ff6361",
-                "#ffa600",
+                "#1f77b4",
+                "#ff7f0e",
+                "#2ca02c",
+                "#d62728",
+                "#9467bd",
             ][: self.Y.shape[-1]]
         elif isinstance(colors, str):
             colors = [colors]

@@ -23,7 +23,6 @@ from manim_stock.util import (
     create_axes,
     create_dot,
     create_tex,
-    create_title,
     next_to_tex,
     update_x_labels,
     update_y_labels,
@@ -200,9 +199,6 @@ class Lineplot(StockVisualization):
             num_y_ticks=self.num_ticks,
         )
 
-        # Create the title
-        title = create_title(self.title)
-
         # Create the axes
         ax = state.axes(self.X, np.max(self.Y, axis=-1))
         points = [
@@ -232,7 +228,7 @@ class Lineplot(StockVisualization):
         ]
 
         self.play(
-            Write(VGroup(ax, title, *graphs, *dots, *graph_names, *graph_values)),
+            Write(VGroup(ax, *graphs, *dots, *graph_names, *graph_values)),
             run_time=self.background_run_time,
         )
 
