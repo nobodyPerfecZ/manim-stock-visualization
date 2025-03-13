@@ -1,6 +1,6 @@
 <div align="middle">
     <h1>
-        📈 Manim Stock Visualization
+        📈 💸 Manim Stock Visualization
         <br>
         <a href="https://github.com/psf/black">
             <img src="https://img.shields.io/badge/code%20style-black-000000.svg">
@@ -19,7 +19,7 @@
 
 This repository contains code to visualize stock market prices with Manim Community Edition (manimCE).
 
-## Download Data
+## Download Data ⬇️
 
 `manim-stock-visualization` provides methods to easily download and preprocess stock data by using [yfinance](https://github.com/ranaroussi/yfinance).
 
@@ -47,7 +47,7 @@ df = preprocess_portfolio_value(df, init_cash=10000)
 df.to_csv("stock_data.csv", index=False)
 ```
 
-## Data Format
+## Data Format 📝
 
 `manim-stock-visualization` operates with CSV files in a specific format.
 The first column represents the x-values (e.g., years), while the other columns represents the y-values (e.g., stock price), with each column corresponding to a distinct graph/bar.
@@ -80,6 +80,28 @@ Year,AAPL,NVDA,TSLA
 ## Example Videos 💻
 
 You can watch the full example videos [here](docs/examples).
+
+### Change the Resolution 📐
+
+To change the resolution, you can overwrite the default configuration in ManimCE.
+The default resolution is 1920x1080 with an aspect ratio of 16:9.
+Below are examples for two common aspect ratios:
+
+```python
+from manim import config
+
+# Aspect ratio (16:9) (1920x1080) (e.g. YouTube)
+config.frame_width = 16
+config.frame_height = 9
+config.pixel_width = 1920
+config.pixel_height = 1080
+
+# Aspect ratio (9:16) (1080x1920) (e.g. TikTok)
+config.frame_width = 9
+config.frame_height = 16
+config.pixel_width = 1080
+config.pixel_height = 1920
+```
 
 ### Line Plot
 
@@ -170,7 +192,8 @@ scene.render()
 <p align="center"><img src="examples/docs/growingbarplot.gif" alt="Logo"></p>
 
 ## Installation of manim-stock-visualization ⚙️
-To use `manim-stock-visualization`, you need to install ``manimCE`` and ``LaTeX`` on your system.
+
+To use `manim-stock-visualization`, you need to install `manimCE` and `LaTeX` on your system.
 Please follow the steps below to install manimCE.
 For other systems, please visit the [manimCE installation guide](https://docs.manim.community/en/stable/installation/uv.html).
 
@@ -194,7 +217,9 @@ sudo apt install texlive-full
 ```bash
 pip install manim
 ```
+
 4. **Installing manim-stock-visualization**:
+
 ```bash
 pip install manim-stock-visualization
 ```
