@@ -55,7 +55,7 @@ class State:
 
         num_y_ticks (int):
             The number of ticks on the y-axis.
-        
+
         y_round (bool):
             Whether to use non-decimal numbers for the y-axis labels.
     """
