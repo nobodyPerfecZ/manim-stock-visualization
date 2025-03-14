@@ -81,14 +81,16 @@ Year,AAPL,NVDA,TSLA
 
 You can watch the full example videos [here](docs/examples).
 
-### Change the Resolution 📐
+### Change the Default Settings 🛠
 
-To change the resolution, you can overwrite the default configuration in ManimCE.
-The default resolution is 1920x1080 with an aspect ratio of 16:9.
-Below are examples for two common aspect ratios:
+You can customize the default settings, such as the output filename, resolution and aspect ratio, by modifying the configuration.
+Below are some examples demonstrating how to override these defaults:
 
 ```python
 from manim import config
+
+# Filename
+config.output_file = "new_file_name"
 
 # Aspect ratio (16:9) (1920x1080) (e.g. YouTube)
 config.frame_width = 16
