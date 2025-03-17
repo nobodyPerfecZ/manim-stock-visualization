@@ -9,7 +9,7 @@ class TestGrowingLineplot:
     def test_render(self):
         """Tests the render() method."""
         scene = GrowingLineplot(
-            path="examples/data/stock_data.csv",
+            path="docs/data/stock_data.csv",
             background_run_time=1,
             animation_run_time=1,
             wait_run_time=1,
