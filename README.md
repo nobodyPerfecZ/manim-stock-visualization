@@ -105,7 +105,7 @@ config.pixel_width = 1080
 config.pixel_height = 1920
 ```
 
-### Line Plot
+### Line Plot 📈
 
 The line plot visualizes the stock market prices [\$] of Apple, NVIDIA and Tesla from 01.01.2010 to 01.01.2025.
 Below is the script to create the animation and the resulting output:
@@ -127,7 +127,7 @@ scene.render()
 
 <p align="center"><img src="examples/docs/lineplot.gif" alt="Logo"></p>
 
-### Growing Line Plot
+### Growing Line Plot 📈
 
 The growing line plot visualizes the stock market prices [\$] of Apple, NVIDIA and Tesla from 01.01.2010 to 01.01.2025.
 Below is the script to create the animation and the resulting output.
@@ -149,7 +149,7 @@ scene.render()
 
 <p align="center"><img src="examples/docs/growinglineplot.gif" alt="Logo"></p>
 
-### Bar Plot
+### Bar Plot 📊
 
 The bar plot visualizes the stock market prices [\$] of Apple, NVIDIA and Tesla from 01.01.2010 to 01.01.2025.
 Below is the script to create the animation and the resulting output.
@@ -171,7 +171,7 @@ scene.render()
 
 <p align="center"><img src="examples/docs/barplot.gif" alt="Logo"></p>
 
-### Growing Bar Plot
+### Growing Bar Plot 📊
 
 The growing bar plot visualizes the stock market prices [\$] of Apple, NVIDIA and Tesla from 01.01.2010 to 01.01.2025.
 Below is the script to create the animation and the resulting output.
