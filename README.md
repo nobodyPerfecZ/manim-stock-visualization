@@ -1,5 +1,8 @@
 <div align="middle">
     <h1>
+        <p>
+            <img src="docs/images/logo.png", alt="Logo", height="300" />
+        </p>
         📈 💸 Manim Stock Visualization
         <br>
         <a href="https://github.com/psf/black">
@@ -70,7 +73,7 @@ Year,AAPL,NVDA,TSLA
 
 ## Example Videos 💻
 
-You can watch the full example videos [here](docs/examples).
+You can watch the full example videos [here](docs/gifs).
 
 ### Change the Default Settings 🛠
 
@@ -116,7 +119,7 @@ scene = Lineplot(
 scene.render()
 ```
 
-<p align="center"><img src="examples/docs/lineplot.gif" alt="Logo"></p>
+<p align="center"><img src="docs/gifs/lineplot.gif" alt="lineplot"></p>
 
 ### Growing Line Plot 📈
 
@@ -138,7 +141,7 @@ scene = GrowingLineplot(
 scene.render()
 ```
 
-<p align="center"><img src="examples/docs/growinglineplot.gif" alt="Logo"></p>
+<p align="center"><img src="docs/gifs/growinglineplot.gif" alt="growinglineplot"></p>
 
 ### Bar Plot 📊
 
@@ -160,7 +163,7 @@ scene = Barplot(
 scene.render()
 ```
 
-<p align="center"><img src="examples/docs/barplot.gif" alt="Logo"></p>
+<p align="center"><img src="docs/gifs/barplot.gif" alt="barplot"></p>
 
 ### Growing Bar Plot 📊
 
@@ -182,7 +185,7 @@ scene = GrowingBarplot(
 scene.render()
 ```
 
-<p align="center"><img src="examples/docs/growingbarplot.gif" alt="Logo"></p>
+<p align="center"><img src="docs/gifs/growingbarplot.gif" alt="growingbarplot"></p>
 
 ## Installation of manim-stock-visualization ⚙️
 
