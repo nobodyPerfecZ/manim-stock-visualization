@@ -23,7 +23,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          sudo apt install build-essential python3-dev libcairo2-dev libpango1.0-dev texlive-full
+          sudo apt install build-essential python3-dev libcairo2-dev libpango1.0-dev texlive-full ffmpeg
           pip install -r requirements.txt
           pip install build twine
       - name: Update version for TestPyPI
