@@ -2,28 +2,31 @@
 
 import logging
 from dataclasses import dataclass, replace
-from typing import List
+from typing import Sequence
 
-import numpy as np
 from manim import (
     DOWN,
     UP,
     BarChart,
     FadeOut,
+    Mobject,
     ReplacementTransform,
+    Tex,
     VGroup,
     Write,
     config,
 )
+from manim.typing import Vector2D
 
 from manim_stock.util import (
+    add_bar_values,
     create_barchart,
-    create_tex,
-    next_to_tex,
+    create_label_name,
+    create_label_value,
     remove_bar_names,
-    update_bar_values,
+    remove_bar_values,
 )
-from manim_stock.visualization.stock import StockVisualization
+from manim_stock.visualization.plot import Plot
 
 # Set logging level to WARNING
 logging.getLogger("manim").setLevel(logging.WARNING)
@@ -35,17 +38,11 @@ config.disable_caching = True
 @dataclass(frozen=True)
 class State:
     """
-    Dataclass to store the state of the visualization of GrowingLineplot.
+    Dataclass to store the state of the visualization of Barplot.
 
     Attributes:
-        x_min (float):
-            The minimum value of the x-axis.
-
-        x_max (float):
-            The maximum value of the x-axis.
-
-        num_x_ticks (int):
-            The number of ticks on the x-axis.
+        time (int):
+            The timestep of the visualization.
 
         y_min (float):
             The minimum value of the y-axis.
@@ -54,54 +51,49 @@ class State:
             The maximum value of the y-axis.
 
         num_y_ticks (int):
-            The number of ticks on the y-axis.
+            The number of ticks of the y-axis.
 
-        y_round (bool):
-            Whether to use non-decimal numbers for the y-axis labels.
+        y_decimals (float):
+            The number of decimal places to round to.
     """
 
+    time: int
     y_min: float
     y_max: float
     num_y_ticks: int
-    y_round: bool
+    y_decimals: int
 
     @property
     def y_tick(self) -> float:
-        """The value between each tick on the y-axis."""
+        """The value between each tick of the y-axis."""
         return (self.y_max - self.y_min) / self.num_y_ticks
 
     def replace(self, **kwargs) -> "State":
-        """
-        Returns a new instance of State with the attributes replaced.
-
-        Args:
-            **kwargs:
-                The attributes to replace.
-
-        Returns:
-            State:
-                A new instance of State with the attributes replaced.
-        """
+        """Returns a new state with the replaced attributes."""
         return replace(self, **kwargs)
 
     def barchart(
         self,
-        bar_values: List[float],
-        bar_names: List[str],
-        bar_colors: List[str],
+        bar_values: Sequence[float],
+        bar_names: Sequence[str],
+        bar_colors: Sequence[str],
+        **kwargs,
     ) -> BarChart:
         """
         Returns an BarChart object with the specified x-/y-labels.
 
         Args:
-            bar_values (List[float]):
+            bar_values (Sequence[float]):
                 The y-values of the bars.
 
-            bar_names (List[str]):
+            bar_names (Sequence[str]):
                 The x-values of the bars.
 
-            bar_colors: List[str]:
+            bar_colors (Sequence[str]):
                 The colors of the bars.
+
+            **kwargs:
+                Additional arguments to pass to create_barchart().
 
         Returns:
             BarChart:
@@ -112,123 +104,177 @@ class State:
             bar_names=bar_names,
             y_range=[self.y_min, self.y_max, self.y_tick],
             bar_colors=bar_colors,
-        )
-        remove_bar_names(ax)
-        update_bar_values(ax, self.y_min, self.y_max, self.num_y_ticks, self.y_round)
-        return ax
-
-
-class Barplot(StockVisualization):
-    """Visualization of stock prices with barplots for multiple tickers."""
-
-    def __init__(
-        self,
-        path: str,
-        title: str = "Market Price",
-        x_label: str = "Year",
-        y_label: str = r"Price [\$]",
-        background_run_time: int = 5,
-        animation_run_time: int = 50,
-        wait_run_time: int = 5,
-        camera_scale: float = 1.2,
-        colors: str | List[str] | None = None,
-        num_ticks: int = 6,
-        num_samples: int = 100,
-        x_round: bool = True,
-        y_round: bool = False,
-        **kwargs,
-    ):
-        super().__init__(
-            path=path,
-            title=title,
-            x_label=x_label,
-            y_label=y_label,
-            background_run_time=background_run_time,
-            animation_run_time=animation_run_time,
-            wait_run_time=wait_run_time,
-            camera_scale=camera_scale,
-            colors=colors,
-            num_ticks=num_ticks,
-            num_samples=num_samples,
-            x_round=x_round,
-            y_round=y_round,
             **kwargs,
         )
+        remove_bar_names(ax)
+        remove_bar_values(ax)
+        add_bar_values(
+            ax,
+            self.y_min,
+            self.y_max,
+            self.num_y_ticks,
+            self.y_decimals,
+        )
+        return ax
+
+    def bar_position(self, ax: BarChart, bar_idx: int) -> Vector2D:
+        """
+        Returns the position of the i-th bar.
+
+        Args:
+            ax (BarChart):
+                The BarChart object.
+
+            bar_idx (int):
+                The i-th index.
+
+        Returns:
+            Vector2D:
+                The position of the i-th bar.
+        """
+        return ax.x_axis.number_to_point(0.5 + 1 * bar_idx)
+
+    def direction(self, value: float) -> Vector2D:
+        """
+        Returns the direction (UP/DOWN) of the bar.
+
+        Args:
+            value (float):
+                The y-value of the bar.
+
+        Returns:
+            Vector2D:
+                The direction of the bar.
+        """
+        return UP if value < 0 else DOWN
+
+    def bar_name(
+        self,
+        name: str,
+        mobject_or_point: Vector2D | Mobject,
+        **kwargs,
+    ) -> Tex:
+        """
+        Create a Tex object with the specified name next to the mobject/point.
+
+        Args:
+            name (str):
+                The name to display.
+
+            mobject_or_point (Vector2D | Mobject):
+                The point/mobject where the name will be located.
+
+            **kwargs:
+                Additional arguments to pass to create_label_name().
+
+        Returns:
+            Tex:
+                The Tex object.
+        """
+        return create_label_name(name=name, mobject_or_point=mobject_or_point, **kwargs)
+
+    def bar_value(
+        self,
+        value: float,
+        mobject_or_point: Vector2D | Mobject,
+        **kwargs,
+    ) -> Tex:
+        """
+        Create a Tex object with the specified value next to the mobject/point.
+
+        Args:
+            value (float):
+                The value to display.
+
+            mobject_or_point (Vector2D | Mobject):
+                The point/mobject where the value will be located.
+
+            **kwargs:
+                Additional arguments to pass to create_label_value().
+
+        Returns:
+            Tex:
+                The Tex object.
+        """
+        return create_label_value(
+            value=value,
+            mobject_or_point=mobject_or_point,
+            value_decimals=self.y_decimals,
+            **kwargs,
+        )
+
+
+class Barplot(Plot):
+    """Visualization of stock prices with barplots for multiple tickers."""
+
+    def __init__(self, path: str, **kwargs):
+        super().__init__(path=path, **kwargs)
+
+    def _create_state(self) -> State:
+        """Returns the initial state of the visualization."""
+        return State(
+            time=0,
+            y_min=0,
+            y_max=self.Y.max(),
+            num_y_ticks=self.num_y_ticks,
+            y_decimals=self.y_decimals,
+        )
+
+    def _update_state(self, state: State, time: int) -> State:
+        """Updates the state of the visualization."""
+        return state.replace(time=time)
+
+    def _create_mobjects(self, state: State) -> Sequence[Mobject]:
+        """Returns the mobjects for the current state."""
+        ax = state.barchart(self.Y[state.time], self.names, self.colors)
+        points = [state.bar_position(ax, j) for j in range(self.Y.shape[-1])]
+        directions = [
+            state.direction(self.Y[state.time, j]) for j in range(self.Y.shape[-1])
+        ]
+        bar_names = [
+            state.bar_name(
+                name=self.names[j],
+                mobject_or_point=points[j],
+                **{
+                    "tex_config": {"color": self.colors[j]},
+                    "next_to_config": {"direction": directions[j]},
+                },
+            )
+            for j in range(self.Y.shape[-1])
+        ]
+        bar_values = [
+            state.bar_value(
+                value=self.Y[state.time, j],
+                mobject_or_point=bar_names[j],
+                **{
+                    "tex_config": {"color": self.colors[j]},
+                    "next_to_config": {"direction": directions[j]},
+                },
+            )
+            for j in range(self.Y.shape[-1])
+        ]
+        return ax, bar_names, bar_values
 
     def construct(self):
         #  Scale the camera frame up by camera_frame_scale
         self.camera.frame.scale(self.camera_scale)
 
-        # Create the initial state
-        state = State(
-            y_min=0,
-            y_max=self.Y.max(),
-            num_y_ticks=self.num_ticks,
-            y_round=self.y_round,
-        )
+        # Create the initial state and mobjects
+        state = self._create_state()
+        ax, bar_names, bar_values = self._create_mobjects(state)
 
-        # Create the barchart
-        ax = state.barchart(
-            bar_values=self.Y[0],
-            bar_names=self.names,
-            bar_colors=self.colors,
-        )
-        xs = np.arange(0.5, self.Y.shape[-1], 1)
-        points = [ax.x_axis.number_to_point(xs[j]) for j in range(self.Y.shape[-1])]
-        directions = [UP if self.Y[0, j] < 0 else DOWN for j in range(self.Y.shape[-1])]
-        bar_names = [
-            next_to_tex(
-                tex=create_tex(self.names[j], color=self.colors[j]),
-                mobject_or_point=points[j],
-                direction=directions[j],
-            )
-            for j in range(self.Y.shape[-1])
-        ]
-        bar_values = [
-            next_to_tex(
-                tex=create_tex(np.round(self.Y[0, j], 2), color=self.colors[j]),
-                mobject_or_point=bar_names[j],
-                direction=directions[j],
-            )
-            for j in range(self.Y.shape[-1])
-        ]
-
-        # Animate the creation of the barchart and title
+        # Display the initial mobjects
         self.play(
             Write(VGroup(ax, *bar_names, *bar_values)),
             run_time=self.background_run_time,
         )
 
-        # Incrementally change bar values
+        # Incrementally update the state and mobjects
         for i in range(1, len(self.df)):
-            # Create new barchart
-            new_ax = state.barchart(self.Y[i], self.names, self.colors)
-            new_xs = np.arange(0.5, self.Y.shape[-1], 1)
-            new_points = [
-                new_ax.x_axis.number_to_point(new_xs[j])
-                for j in range(self.Y.shape[-1])
-            ]
-            new_directions = [
-                UP if self.Y[i, j] < 0 else DOWN for j in range(self.Y.shape[-1])
-            ]
-            new_bar_names = [
-                next_to_tex(
-                    tex=create_tex(self.names[j], color=self.colors[j]),
-                    mobject_or_point=new_points[j],
-                    direction=new_directions[j],
-                )
-                for j in range(self.Y.shape[-1])
-            ]
-            new_bar_values = [
-                next_to_tex(
-                    tex=create_tex(np.round(self.Y[i, j], 2), color=self.colors[j]),
-                    mobject_or_point=new_bar_names[j],
-                    direction=new_directions[j],
-                )
-                for j in range(self.Y.shape[-1])
-            ]
+            state = self._update_state(state, i)
+            new_ax, new_bar_names, new_bar_values = self._create_mobjects(state)
 
-            # Animate bar value change
+            # Animate the transition from the old to the new mobjects
             self.play(
                 ReplacementTransform(ax, new_ax),
                 ReplacementTransform(VGroup(*bar_names), VGroup(*new_bar_names)),

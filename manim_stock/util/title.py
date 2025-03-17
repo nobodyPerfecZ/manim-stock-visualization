@@ -1,28 +1,27 @@
+"""Utility functions for Title objects."""
+
 from manim import Title
 
 from manim_stock.util.const import AXES_FONT_SIZE
 
 
-def create_title(
-    title: str,
-    font_size: float = AXES_FONT_SIZE,
-    include_underline: bool = False,
-    **kwargs,
-) -> Title:
+def create_title(title: str, **kwargs) -> Title:
     """
-    Creates a Title object.
+    Create a Title object.
 
     Args:
         title (str):
             The text to be displayed.
 
+        **kwargs:
+            Additional arguments to be passed to Title().
+
     Returns:
         Title:
-            A Title object.
+            The Title object.
     """
-    return Title(
-        title,
-        font_size=font_size,
-        include_underline=include_underline,
-        **kwargs,
-    )
+    if "font_size" not in kwargs:
+        kwargs["font_size"] = AXES_FONT_SIZE
+    if "include_underline" not in kwargs:
+        kwargs["include_underline"] = False
+    return Title(title, **kwargs)

@@ -1,33 +1,36 @@
-"""Visualization of stock prices over time for multiple ticker."""
+"""Visualization of stock prices with lineplots for multiple ticker."""
 
 import logging
 from dataclasses import dataclass, replace
-from typing import List, Tuple
+from typing import Sequence
 
 import numpy as np
 from manim import (
-    RIGHT,
-    UR,
     Axes,
     Dot,
     FadeOut,
+    Mobject,
     ReplacementTransform,
-    Transform,
+    Tex,
     VGroup,
     VMobject,
     Write,
     config,
 )
+from manim.typing import Vector2D, Vector2D_Array
 
 from manim_stock.util import (
+    add_x_labels_custom,
+    add_y_labels_range,
     create_axes,
     create_dot,
-    create_tex,
-    next_to_tex,
-    update_x_labels,
-    update_y_labels,
+    create_graph,
+    create_label_name,
+    create_label_value,
+    remove_x_labels,
+    remove_y_labels,
 )
-from manim_stock.visualization.stock import StockVisualization
+from manim_stock.visualization.plot import Plot
 
 # Set logging level to WARNING
 logging.getLogger("manim").setLevel(logging.WARNING)
@@ -39,9 +42,12 @@ config.disable_caching = True
 @dataclass(frozen=True)
 class State:
     """
-    Dataclass to store the state of the visualization of GrowingLineplot.
+    Dataclass to store the state of the visualization of Lineplot.
 
     Attributes:
+        time (int):
+            The timestep of the visualization.
+
         x_min (float):
             The minimum value of the x-axis.
 
@@ -49,10 +55,10 @@ class State:
             The maximum value of the x-axis.
 
         num_x_ticks (int):
-            The number of ticks on the x-axis.
+            The number of ticks of the x-axis.
 
-        x_round (bool):
-            Whether to use non-decimal numbers for the x-axis labels.
+        x_decimals (int):
+            The number of decimal places to round to.
 
         y_min (float):
             The minimum value of the y-axis.
@@ -61,55 +67,46 @@ class State:
             The maximum value of the y-axis.
 
         num_y_ticks (int):
-            The number of ticks on the y-axis.
+            The number of ticks of the y-axis.
 
-        y_round (bool):
-            Whether to use non-decimal numbers for the y-axis labels.
+        y_decimals (int):
+            The number of decimal places to round to.
     """
 
+    time: int
     x_min: float
     x_max: float
     num_x_ticks: int
-    x_round: bool
+    x_decimals: int
     y_min: float
     y_max: float
     num_y_ticks: int
-    y_round: bool
+    y_decimals: int
 
     @property
     def x_tick(self) -> float:
-        """The value between each tick on the x-axis."""
+        """The value between each tick of the x-axis."""
         return (self.x_max - self.x_min) / self.num_x_ticks
 
     @property
     def y_tick(self) -> float:
-        """The value between each tick on the y-axis."""
+        """The value between each tick of the y-axis."""
         return (self.y_max - self.y_min) / self.num_y_ticks
 
     def replace(self, **kwargs) -> "State":
-        """
-        Returns a new instance of State with the attributes replaced.
-
-        Args:
-            **kwargs:
-                The attributes to replace.
-
-        Returns:
-            State:
-                A new instance of State with the attributes replaced.
-        """
+        """Returns a new state with the replaced attributes."""
         return replace(self, **kwargs)
 
-    def axes(self, x: np.ndarray, y: np.ndarray) -> Axes:
+    def axes(self, x_labels: np.ndarray, **kwargs) -> Axes:
         """
         Returns an Axes object with the specified x-/y-labels.
 
         Args:
-            x (np.ndarray):
-                The x-values of the data points.
+            x_labels (np.ndarray):
+                The custom x-labels to display.
 
-            y (np.ndarray):
-                The y-values of the data points.
+            **kwargs:
+                Additional arguments to pass to create_axes().
 
         Returns:
             Axes:
@@ -118,174 +115,212 @@ class State:
         ax = create_axes(
             x_range=[self.x_min, self.x_max, self.x_tick],
             y_range=[self.y_min, self.y_max, self.y_tick],
+            **kwargs,
         )
-        update_x_labels(ax, x, self.x_min, self.x_max, self.num_x_ticks, self.x_round)
-        update_y_labels(ax, y, self.y_min, self.y_max, self.num_y_ticks, self.y_round)
+        remove_x_labels(ax)
+        remove_y_labels(ax)
+        add_x_labels_custom(
+            ax,
+            x_labels,
+            self.num_x_ticks,
+            self.x_decimals,
+        )
+        add_y_labels_range(
+            ax,
+            self.y_min,
+            self.y_max,
+            self.num_y_ticks,
+            self.y_decimals,
+        )
         return ax
 
-    def points(
-        self, ax: Axes, x_indices: np.ndarray, y: np.ndarray
-    ) -> List[Tuple[float, float]]:
+    def points(self, ax: Axes, x_indices: np.ndarray, y: np.ndarray) -> Vector2D_Array:
         """
-        Returns the points on the graph corresponding to the x-/y-values.
+        Returns the points of the graph.
 
         Args:
             ax (Axes):
-                The Axes object to plot
+                The Axes object.
 
             x_indices (np.ndarray):
-                The x-values of the data points.
+                The indices of the x-values.
 
             y (np.ndarray):
-                The y-values of the data points.
+                The y-values.
 
         Returns:
-            List[Tuple[float, float]]:
-                The points on the graph corresponding to the x-/y-values.
+            Vector2D_Array:
+                The points of the graph.
         """
         return [ax.c2p(x_indices[i], y[i]) for i in range(len(x_indices))]
 
-    def dots(self, points: List[Tuple[float, float]]) -> List[Dot]:
+    def dots(self, points: Vector2D_Array) -> Sequence[Dot]:
         """
-        Returns a list of dots objects at the specified points.
+        Returns the Dot objects at each point.
 
         Args:
-            points (List[Tuple[float, float]]):
-                The points to place the dots.
+            points (Vector2D_Array):
+                The points.
 
         Returns:
-            List[Dot]:
-                The list of dots
+            Sequence[Dot]:
+                The Dot objects
         """
         return [create_dot(point) for point in points]
 
+    def graph(self, points: Vector2D_Array, **kwargs) -> VMobject:
+        """
+        Create a Graph object.
 
-class Lineplot(StockVisualization):
-    """Visualization of stock prices with line graphs for multiple tickers."""
+        Args:
+            points (Vector2D_Array):
+                The points.
 
-    def __init__(
-        self,
-        path: str,
-        title: str = "Market Price",
-        x_label: str = "Year",
-        y_label: str = r"Price [\$]",
-        background_run_time: int = 5,
-        animation_run_time: int = 50,
-        wait_run_time: int = 5,
-        camera_scale: float = 1.2,
-        colors: str | List[str] | None = None,
-        num_ticks: int = 6,
-        num_samples: int = 100,
-        x_round: bool = True,
-        y_round: bool = False,
-        **kwargs,
-    ):
-        super().__init__(
-            path=path,
-            title=title,
-            x_label=x_label,
-            y_label=y_label,
-            background_run_time=background_run_time,
-            animation_run_time=animation_run_time,
-            wait_run_time=wait_run_time,
-            camera_scale=camera_scale,
-            colors=colors,
-            num_ticks=num_ticks,
-            num_samples=num_samples,
-            x_round=x_round,
-            y_round=y_round,
+            **kwargs:
+                Additional arguments to pass to create_graph().
+
+        Returns:
+            VMobject:
+                The Graph object.
+        """
+        return create_graph(points=points, **kwargs)
+
+    def graph_name(self, name: str, mobject_or_point: Vector2D, **kwargs) -> Tex:
+        """
+        Create a Tex object with the specified name next to the mobject/point.
+
+        Args:
+            name (str):
+                The name to display.
+
+            mobject_or_point (Vector2D | Mobject):
+                The point/mobject where the name will be located.
+
+            **kwargs:
+                Additional arguments to pass to create_label_name().
+
+        Returns:
+            Tex:
+                The Tex object.
+        """
+        return create_label_name(name=name, mobject_or_point=mobject_or_point, **kwargs)
+
+    def graph_value(self, value: float, mobject_or_point: Vector2D, **kwargs) -> Tex:
+        """
+        Create a Tex object with the specified value next to the last point.
+
+        Args:
+            value (float):
+                The value to display.
+
+            mobject_or_point (Vector2D | Mobject):
+                The point/mobject where the value will be located.
+
+            **kwargs:
+                Additional arguments to pass to create_label_value().
+
+        Returns:
+            Tex:
+                The Tex object.
+        """
+        return create_label_value(
+            value=value,
+            mobject_or_point=mobject_or_point,
+            value_decimals=self.y_decimals,
             **kwargs,
         )
+
+
+class Lineplot(Plot):
+    """Visualization of stock prices with lineplots for multiple tickers."""
+
+    def __init__(self, path: str, **kwargs):
+        super().__init__(path=path, **kwargs)
+
+    def _create_state(self) -> State:
+        return State(
+            time=0,
+            x_min=0,
+            x_max=self.X_indices.max(),
+            num_x_ticks=3,
+            x_decimals=self.x_decimals,
+            y_min=0,
+            y_max=self.Y.max(),
+            num_y_ticks=3,
+            y_decimals=self.y_decimals,
+        )
+
+    def _update_state(self, state: State, time: int) -> State:
+        """Returns the initial state of the visualization."""
+        return state.replace(time=time)
+
+    def _create_mobjects(self, state: State) -> Sequence[Mobject]:
+        """Returns the mobjects for the current state."""
+        ax = state.axes(self.X[: state.x_max])
+        points = [
+            state.points(ax, self.X_indices, self.Y[:, j])[: state.time + 1]
+            for j in range(self.Y.shape[-1])
+        ]
+        graphs = [
+            state.graph(points=points[j], color=self.colors[j])
+            for j in range(self.Y.shape[-1])
+        ]
+        graph_names = [
+            state.graph_name(
+                name=self.names[j],
+                mobject_or_point=points[j][-1],
+                **{"tex_config": {"color": self.colors[j]}},
+            )
+            for j in range(self.Y.shape[-1])
+        ]
+        graph_values = [
+            state.graph_value(
+                value=self.Y[state.time, j],
+                mobject_or_point=points[j][-1],
+                **{"tex_config": {"color": self.colors[j]}},
+            )
+            for j in range(self.Y.shape[-1])
+        ]
+        return ax, graphs, graph_names, graph_values
 
     def construct(self):
         #  Scale the camera frame up by camera_frame_scale
         self.camera.frame.scale(self.camera_scale)
 
-        # Create the initial state
-        state = State(
-            x_min=0,
-            x_max=self.X_indices.max(),
-            num_x_ticks=self.num_ticks,
-            x_round=self.x_round,
-            y_min=0,
-            y_max=self.Y.max(),
-            num_y_ticks=self.num_ticks,
-            y_round=self.y_round,
-        )
+        # Create the initial state and mobjects
+        state = self._create_state()
+        ax, graphs, graph_names, graph_values = self._create_mobjects(state)
 
-        # Create the axes
-        ax = state.axes(self.X, np.max(self.Y, axis=-1))
-        points = [
-            state.points(ax, self.X_indices, self.Y[:, j])[:1]
-            for j in range(self.Y.shape[-1])
-        ]
-        graphs = [
-            VMobject(color=self.colors[j]).set_points_as_corners(points[j])
-            for j in range(self.Y.shape[-1])
-        ]
-        dots = [state.dots(points[j]) for j in range(self.Y.shape[-1])]
-        graph_names = [
-            next_to_tex(
-                tex=create_tex(self.names[j], color=self.colors[j]),
-                mobject_or_point=state.points(ax, self.X_indices, self.Y[:, j])[0],
-                direction=UR,
-            )
-            for j in range(self.Y.shape[-1])
-        ]
-        graph_values = [
-            next_to_tex(
-                tex=create_tex(np.round(self.Y[0, j], 2), color=self.colors[j]),
-                mobject_or_point=state.points(ax, self.X_indices, self.Y[:, j])[0],
-                direction=RIGHT,
-            )
-            for j in range(self.Y.shape[-1])
-        ]
-
+        # Display the initial mobjects
         self.play(
-            Write(VGroup(ax, *graphs, *dots, *graph_names, *graph_values)),
+            Write(VGroup(ax, *graphs, *graph_names, *graph_values)),
             run_time=self.background_run_time,
         )
 
+        # Incrementally update the state and mobjects
         for i in range(1, len(self.df)):
-            new_points = [
-                state.points(ax, self.X_indices, self.Y[:, j])[: i + 1]
-                for j in range(self.Y.shape[-1])
-            ]
-            new_graphs = [
-                VMobject(color=self.colors[j]).set_points_as_corners(new_points[j])
-                for j in range(self.Y.shape[-1])
-            ]
-            new_dots = [state.dots(new_points[j]) for j in range(self.Y.shape[-1])]
-            new_graph_names = [
-                next_to_tex(
-                    tex=create_tex(self.names[j], color=self.colors[j]),
-                    mobject_or_point=state.points(ax, self.X_indices, self.Y[:, j])[i],
-                    direction=UR,
-                )
-                for j in range(self.Y.shape[-1])
-            ]
-            new_graph_values = [
-                next_to_tex(
-                    tex=create_tex(np.round(self.Y[i, j], 2), color=self.colors[j]),
-                    mobject_or_point=state.points(ax, self.X_indices, self.Y[:, j])[i],
-                    direction=RIGHT,
-                )
-                for j in range(self.Y.shape[-1])
-            ]
+            state = self._update_state(state, i)
+            new_ax, new_graphs, new_graph_names, new_graph_values = (
+                self._create_mobjects(state)
+            )
+
+            # Animate the transition from the old to the new mobjects
             self.play(
-                Transform(VGroup(*graphs), VGroup(*new_graphs)),
-                ReplacementTransform(VGroup(*dots), VGroup(*new_dots)),
+                ReplacementTransform(ax, new_ax),
+                ReplacementTransform(VGroup(*graphs), VGroup(*new_graphs)),
                 ReplacementTransform(VGroup(*graph_names), VGroup(*new_graph_names)),
                 ReplacementTransform(VGroup(*graph_values), VGroup(*new_graph_values)),
                 run_time=self.animation_run_time / len(self.df),
             )
 
-            points = new_points
-            dots = new_dots
+            # Update references for next iteration
+            ax = new_ax
+            graphs = new_graphs
             graph_names = new_graph_names
             graph_values = new_graph_values
 
+        # Wait before finishing the animation
         self.play(
-            FadeOut(VGroup(*dots, *graph_names, *graph_values)),
+            FadeOut(VGroup(*graph_names, *graph_values)),
             run_time=self.wait_run_time,
         )

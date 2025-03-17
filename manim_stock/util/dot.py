@@ -1,25 +1,18 @@
 """Utility functions for Dot objects."""
 
-import numpy as np
 from manim import Dot
+from manim.typing import Vector2D
 
 from manim_stock.util.const import DOT_RADIUS
 
 
-def create_dot(
-    point: np.ndarray,
-    radius: float = DOT_RADIUS,
-    **kwargs,
-) -> Dot:
+def create_dot(point: Vector2D, **kwargs) -> Dot:
     """
     Create a Dot object.
 
     Args:
-        point (np.ndarray):
+        point (Vector2D):
             The point where the dot will be located.
-
-        radius (float):
-            The size of the dot.
 
         **kwargs:
             Additional arguments to be passed to Dot().
@@ -28,4 +21,6 @@ def create_dot(
         Dot:
             The Dot object.
     """
-    return Dot(point=point, radius=radius, **kwargs)
+    if "radius" not in kwargs:
+        kwargs["radius"] = DOT_RADIUS
+    return Dot(point=point, **kwargs)

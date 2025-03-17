@@ -1,6 +1,6 @@
 """Utility functions for Axes objects."""
 
-from typing import Tuple
+from typing import Sequence
 
 import numpy as np
 from manim import Axes, config
@@ -9,71 +9,72 @@ from manim_stock.util.const import AXES_FONT_SIZE
 
 
 def create_axes(
-    x_range: Tuple[float, float, float],
-    y_range: Tuple[float, float, float],
+    x_range: Sequence[float],
+    y_range: Sequence[float],
+    **kwargs,
 ) -> Axes:
     """
     Creates an Axes object.
 
     Args:
-        x_range (Tuple[float, float, float]):
+        x_range (Sequence[float]):
             The [x_min, x_max, x_step] of the x-axis.
 
-        y_range (Tuple[float, float, float]):
+        y_range (Sequence[float]):
             The [y_min, y_max, y_step] of the y-axis.
+
+        **kwargs:
+            Additional arguments to be passed to Axes().
 
     Returns:
         Axes:
-            The axes object.
+            The Axes object.
     """
+    if "x_length" not in kwargs:
+        kwargs["x_length"] = round(config.frame_width) - 2
+    if "y_length" not in kwargs:
+        kwargs["y_length"] = round(config.frame_height) - 2
+    if "tips" not in kwargs:
+        kwargs["tips"] = False
+    if "x_axis_config" not in kwargs:
+        kwargs["x_axis_config"] = {
+            "include_numbers": False,
+            "font_size": AXES_FONT_SIZE,
+        }
+    if "y_axis_config" not in kwargs:
+        kwargs["y_axis_config"] = {
+            "include_numbers": False,
+            "font_size": AXES_FONT_SIZE,
+        }
+
     return Axes(
         x_range=x_range,
         y_range=y_range,
-        y_length=round(config.frame_height) - 2,
-        x_length=round(config.frame_width) - 2,
-        tips=False,
-        y_axis_config={
-            "include_numbers": False,
-            "font_size": AXES_FONT_SIZE,
-        },
-        x_axis_config={
-            "include_numbers": False,
-            "font_size": AXES_FONT_SIZE,
-        },
+        **kwargs,
     )
 
 
 def remove_x_labels(ax: Axes):
-    """
-    Remove the x-axis labels from an Axes object.
-
-    Args:
-        ax (Axes):
-            The Axes object.
-    """
+    """Remove the x-axis labels from an Axes object."""
     if hasattr(ax.x_axis, "labels"):
         ax.x_axis.remove(ax.x_axis.labels)
     if hasattr(ax.x_axis, "numbers"):
         ax.x_axis.remove(ax.x_axis.numbers)
 
 
-def add_x_labels(
+def add_x_labels_range(
     ax: Axes,
-    x: np.ndarray,
     x_min: float,
     x_max: float,
     num_x_ticks: int,
-    x_round: bool = False,
+    x_decimals: int,
 ):
     """
-    Add x-axis labels to an Axes object.
+    Add x-axis labels to an Axes object using a range of values.
 
     Args:
         ax (Axes):
             The Axes object.
-
-        x (np.ndarray):
-            The data points of the x-axis.
 
         x_min (float):
             The minimum value of the x-axis.
@@ -84,95 +85,79 @@ def add_x_labels(
         num_x_ticks (int):
             The number of x-axis ticks.
 
-        x_round (bool):
-            Whether to use non-decimal numbers for the x-axis labels.
+        x_decimals (int):
+            The number of decimal places to round to.
     """
-    x_tick_indices = ax.x_axis.get_tick_range().tolist()
-    x_label_indices = np.linspace(
-        start=x_min,
-        stop=x_max,
-        num=num_x_ticks + 1,
-        endpoint=True,
-        dtype=int,
-    )[1:]
-    x_labels = x[x_label_indices]
-    if x_round:
-        x_labels = x_labels.astype(np.int32)
+    x_labels = np.linspace(x_min, x_max, num_x_ticks + 1, endpoint=True)[1:]
+
+    if x_decimals:
+        x_labels = np.round(x_labels, x_decimals)
     else:
-        x_labels = np.round(x_labels, 2)
-    ax.x_axis.add_labels(
-        {
-            x_tick_idx: int(x_label)
-            for x_tick_idx, x_label in zip(x_tick_indices, x_labels)
-        }
-    )
+        x_labels = np.fix(x_labels).astype(np.int32)
+
+    ax.x_axis.add_labels(dict(zip(ax.x_axis.get_tick_range(), x_labels)))
 
 
-def update_x_labels(
+def add_x_labels_custom(
     ax: Axes,
-    x: np.ndarray,
-    x_min: float,
-    x_max: float,
+    x_labels: np.ndarray,
     num_x_ticks: int,
-    x_round: bool = False,
+    x_decimals: int,
 ):
     """
-    Remove old and add new x-axis labels to an Axes object.
+    Add custom x-axis labels to an Axes object.
 
     Args:
         ax (Axes):
             The Axes object.
 
-        x (np.ndarray):
-            The data points of the x-axis.
-
-        x_min (float):
-            The minimum value of the x-axis.
-
-        x_max (float):
-            The maximum value of the x-axis.
+        x_labels (np.ndarray):
+            The custom x-axis labels.
 
         num_x_ticks (int):
             The number of x-axis ticks.
 
-        round (bool):
-            Whether to use non-decimal numbers for the x-axis labels.
+        x_decimals (int):
+            The number of decimal places to round to.
     """
-    remove_x_labels(ax)
-    add_x_labels(ax, x, x_min, x_max, num_x_ticks, x_round)
+    x_label_indicies = np.linspace(
+        0,
+        len(x_labels) - 1,
+        num_x_ticks + 1,
+        endpoint=True,
+        dtype=np.int32,
+    )[1:]
+    x_labels = x_labels[x_label_indicies]
+
+    if x_decimals:
+        x_labels = np.round(x_labels, x_decimals)
+    else:
+        x_labels = np.fix(x_labels).astype(np.int32)
+
+    ax.x_axis.add_labels(dict(zip(ax.x_axis.get_tick_range(), x_labels)))
 
 
 def remove_y_labels(ax: Axes):
-    """
-    Remove the y-axis labels from an Axes object.
-
-    Args:
-        ax (Axes):
-            The Axes object.
-    """
+    """Remove the y-axis labels from an Axes object."""
     if hasattr(ax.y_axis, "labels"):
         ax.y_axis.remove(ax.y_axis.labels)
     if hasattr(ax.y_axis, "numbers"):
         ax.y_axis.remove(ax.y_axis.numbers)
 
 
-def add_y_labels(
+def add_y_labels_range(
     ax: Axes,
-    y: np.ndarray,
     y_min: float,
     y_max: float,
     num_y_ticks: int,
-    y_round: bool = False,
+    y_decimals: int,
 ):
     """
-    Add y-axis labels to an Axes object.
+    Add y-axis labels to an Axes object using a range of values.
 
     Args:
         ax (Axes):
             The Axes object.
-
-        Y (np.ndarray):
-            The data points of the y-axis.
 
         y_min (float):
             The minimum value of the y-axis.
@@ -183,55 +168,52 @@ def add_y_labels(
         num_y_ticks (int):
             The number of y-axis ticks.
 
-        y_round (bool):
-            Whether to use non-decimal numbers for the y-axis labels.
+        y_decimals (int):
+            The number of decimal places to round to.
     """
-    y_tick_indices = ax.y_axis.get_tick_range().tolist()
-    y_labels = np.linspace(
-        start=y_min,
-        stop=y_max,
-        num=num_y_ticks + 1,
-        endpoint=True,
-        dtype=float,
-    )[1:]
-    if y_round:
-        y_labels = y_labels.astype(np.int32)
+    y_labels = np.linspace(y_min, y_max, num_y_ticks + 1, endpoint=True)[1:]
+
+    if y_decimals:
+        y_labels = np.round(y_labels, y_decimals)
     else:
-        y_labels = np.round(y_labels, 2)
-    ax.y_axis.add_labels(
-        {y_tick_idx: y_label for y_tick_idx, y_label in zip(y_tick_indices, y_labels)}
-    )
+        y_labels = np.fix(y_labels).astype(np.int32)
+
+    ax.y_axis.add_labels(dict(zip(ax.y_axis.get_tick_range(), y_labels)))
 
 
-def update_y_labels(
+def add_y_labels_custom(
     ax: Axes,
-    y: np.ndarray,
-    y_min: float,
-    y_max: float,
+    y_labels: np.ndarray,
     num_y_ticks: int,
-    y_round: bool = False,
+    y_decimals: int,
 ):
     """
-    Remove old and add new x-axis labels to an Axes object.
+    Add custom y-axis labels to an Axes object.
 
     Args:
         ax (Axes):
             The Axes object.
 
-        y (np.ndarray):
-            The data points of the y-axis.
-
-        y_min (float):
-            The minimum value of the y-axis.
-
-        y_max (float):
-            The maximum value of the y-axis.
+        y_labels (np.ndarray):
+            The custom y-axis labels.
 
         num_y_ticks (int):
             The number of y-axis ticks.
 
-        y_round (bool):
-            Whether to use non-decimal numbers for the y-axis labels.
+        y_decimals (int):
+            The number of decimal places to round to.
     """
-    remove_y_labels(ax)
-    add_y_labels(ax, y, y_min, y_max, num_y_ticks, y_round)
+    y_labels = np.linspace(
+        0,
+        len(y_labels) - 1,
+        num_y_ticks + 1,
+        endpoint=True,
+        dtype=np.int32,
+    )[1:]
+
+    if y_decimals:
+        y_labels = np.round(y_labels, y_decimals)
+    else:
+        y_labels = np.fix(y_labels).astype(np.int32)
+
+    ax.y_axis.add_labels(dict(zip(ax.y_axis.get_tick_range(), y_labels)))

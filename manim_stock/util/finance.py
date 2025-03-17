@@ -1,86 +1,87 @@
 """Utility functions for downloading and preprocessing stock data."""
 
 import itertools
-from typing import List
+from typing import Sequence
 
 import pandas as pd
 import yfinance as yf
 
 
 def download_stock_data(
-    tickers: str | List[str],
+    tickers: str | Sequence[str],
     start: str = "1900-01-01",
     end: str = "2100-01-01",
-    rounding: bool = True,
+    **kwargs,
 ) -> pd.DataFrame:
     """
     Download stock data from Yahoo Finance.
 
     Args:
-        ticker (str | List[str]):
-            The stock ticker to download
+        ticker (str | Sequence[str]):
+            The stock ticker to download.
 
         start (str):
-            The start date in YYYY-MM-DD format
+            The start date in YYYY-MM-DD format.
 
         end (str):
-            The end date in YYYY-MM-DD format
+            The end date in YYYY-MM-DD format.
 
-        rounding (bool):
-            Whether to round the stock prices to 2 decimal places
+        **kwargs:
+            Additional arguments to be passed to yf.download().
 
     Returns:
         pd.DataFrame:
-            The stock data as a DataFrame
+            The resulting DataFrame.
     """
-    return yf.download(
-        tickers=tickers,
-        start=start,
-        end=end,
-        rounding=rounding,
-        progress=False,
-    )
+    if "rounding" not in kwargs:
+        kwargs["rounding"] = True
+    if "progress" not in kwargs:
+        kwargs["progress"] = False
+    if "auto_adjust" not in kwargs:
+        kwargs["auto_adjust"] = True
+
+    return yf.download(tickers=tickers, start=start, end=end, **kwargs)
 
 
 def preprocess_stock_data(df: pd.DataFrame, column: str = "High") -> pd.DataFrame:
     """
-    Preprocess stock data by extracting the specified column and the index.
+    Extract the specified column and index from the DataFrame.
 
     Args:
         df (pd.DataFrame):
-            The stock data as a DataFrame
+            The DataFrame to preprocess.
 
     Returns:
         pd.DataFrame:
-            The preprocessed stock data
+            The preprocessed DataFrame.
     """
     levels = [[column], list(df.columns.levels[1])]
     multi_index = list(itertools.product(*levels))
 
     data = {"Year": df.index.strftime("%Y").to_numpy(dtype=int)}
-    for column, ticker in multi_index:
-        data[ticker] = df[(column, ticker)].to_numpy(dtype=float)
+    for col, ticker in multi_index:
+        data[ticker] = df[(col, ticker)].to_numpy(dtype=float)
 
     return pd.DataFrame(data).dropna(inplace=False)
 
 
 def preprocess_portfolio_value(
     df: pd.DataFrame,
-    init_cash: float = 10000,
+    init_cash: float = 1000,
 ) -> pd.DataFrame:
     """
-    Converts stock prices into portfolio value over time.
+    Convert DataFrame with stock prices into DataFrame with portfolio value.
 
     Args:
         df (pd.DataFrame):
-            The stock data as a DataFrame
+            The DataFrame with stock prices
 
         init_cash (float):
             The initial cash to invest
 
     Returns:
         pd.DataFrame:
-            The preprocessed stock data
+            The DataFrame with portfolio value
     """
     shares = init_cash / df[df.columns[1:]].iloc[0]
     df[df.columns[1:]] = shares * df[df.columns[1:]]
