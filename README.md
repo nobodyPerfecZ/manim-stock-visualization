@@ -12,7 +12,7 @@
             <img src="https://img.shields.io/badge/tests-passed-brightgreen">
         </a>
         <a>
-            <img src="https://img.shields.io/badge/coverage-95%25-brightgreen">
+            <img src="https://img.shields.io/badge/coverage-91%25-brightgreen">
         </a>
     </h1>
 </div>
@@ -33,15 +33,15 @@ from manim_stock.util import download_stock_data, preprocess_stock_data
 # Download stock data
 df = download_stock_data(
     tickers=["AAPL", "NVDA", "TSLA"],
-    start="1900-01-01",
-    end="2100-01-01",
+    start="2015-01-01",
+    end="2025-01-01",
 )
 
 # Preprocess stock data
 df = preprocess_stock_data(df, column="High")
 
 # (Optional:) Convert stock price to portfolio value given an initial cashflow
-df = preprocess_portfolio_value(df, init_cash=10000)
+df = preprocess_portfolio_value(df, init_cash=100)
 
 # Safe stock data as CSV file
 df.to_csv("stock_data.csv", index=False)
@@ -56,25 +56,16 @@ An example CSV file is displayed below:
 
 ```
 Year,AAPL,NVDA,TSLA
-2010,7.96,0.25,1.67
-2010,7.76,0.24,2.03
-2010,7.67,0.24,1.73
-2010,7.55,0.24,1.54
-2010,7.61,0.24,1.33
-2010,7.79,0.25,1.11
-2010,7.91,0.25,1.17
-2010,7.82,0.24,1.19
-2010,7.88,0.24,1.2
-2010,7.72,0.25,1.24
-2010,7.7,0.26,1.34
-2010,7.73,0.25,1.43
-2010,7.67,0.25,1.42
-2010,7.52,0.24,1.48
-2010,7.61,0.25,1.46
-2010,7.98,0.25,1.39
-2010,7.82,0.24,1.42
-2010,7.84,0.24,1.44
-2010,7.83,0.24,1.43
+2015,100.0,100.0,100.0
+2015,97.49899152884228,97.95918367346938,96.9758064516129
+2015,96.40984267849939,97.95918367346938,95.96774193548386
+2015,97.09560306575231,95.91836734693878,96.23655913978494
+2015,100.64542154094393,97.95918367346938,95.76612903225805
+2015,101.61355385235983,97.95918367346938,94.08602150537634
+2015,101.04881000403388,97.95918367346938,91.59946236559139
+2015,101.21016538926986,100.0,93.01075268817203
+2015,99.15288422751108,97.95918367346938,87.43279569892472
+2015,98.74949576442114,97.95918367346938,87.70161290322581
 ```
 
 ## Example Videos 💻
