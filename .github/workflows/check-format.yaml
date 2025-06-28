@@ -27,7 +27,7 @@ jobs:
           echo "$(pwd)/.venv/bin" >> $GITHUB_PATH
       - name: Install dependencies
         run: |
-          sudo apt install texlive-full
+          sudo apt install build-essential python3-dev libcairo2-dev libpango1.0-dev texlive-full ffmpeg
           uv pip install -r pyproject.toml
           uv pip install --group dev
       - name: Check Format with flake8
