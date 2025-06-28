@@ -17,25 +17,16 @@ jobs:
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+      - name: Install uv
         run: |
-          sudo apt install build-essential python3-dev libcairo2-dev libpango1.0-dev texlive-full ffmpeg
-          pip install -r requirements.txt
-          pip install build twine
+          curl -LsSf https://astral.sh/uv/install.sh | sh
       - name: Update version for TestPyPI
         run: |
           VERSION_SUFFIX=$(date +%Y%m%d%H%M%S)
           sed -i "s/^version = \"\(.*\)\"/version = \"\1.dev$VERSION_SUFFIX\"/" pyproject.toml
-      - name: Build distribution
+      - name: Build package
         run: |
-          python -m build
+          uv build
       - name: Publish to TestPyPI
         run: |
-          python -m twine upload --verbose --repository testpypi dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          uv publish --index testpypi --token ${{ secrets.TEST_PYPI_API_TOKEN }}

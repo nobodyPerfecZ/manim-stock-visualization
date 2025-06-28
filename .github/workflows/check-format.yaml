@@ -17,19 +17,21 @@ jobs:
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
+        run: |
+          uv venv --python ${{ matrix.python-version }}
+          echo "VIRTUAL_ENV=$(pwd)/.venv" >> $GITHUB_ENV
+          echo "$(pwd)/.venv/bin" >> $GITHUB_PATH
       - name: Install dependencies
         run: |
-          sudo apt install build-essential python3-dev libcairo2-dev libpango1.0-dev texlive-full ffmpeg
-          pip install -r requirements.txt
-          pip install flake8
+          uv pip install -r pyproject.toml
+          uv pip install --group dev
       - name: Check Format with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 --exclude .venv --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. Black has 88 max-line-length
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
-
+          flake8 --exclude .venv --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics

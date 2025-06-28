@@ -1,3 +1,5 @@
+
+  
 name: Run Unittests
 
 on:
@@ -17,15 +19,20 @@ jobs:
     steps:
       - name: Set up the repository
         uses: actions/checkout@v4
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
+        run: |
+          uv venv --python ${{ matrix.python-version }}
+          echo "VIRTUAL_ENV=$(pwd)/.venv" >> $GITHUB_ENV
+          echo "$(pwd)/.venv/bin" >> $GITHUB_PATH
       - name: Install dependencies
         run: |
           sudo apt install build-essential python3-dev libcairo2-dev libpango1.0-dev texlive-full ffmpeg
-          pip install -r requirements.txt
-          pip install pytest
+          uv pip install -r pyproject.toml
+          uv pip install --group dev
       - name: Run Unittests
         run: |
           pytest
+
