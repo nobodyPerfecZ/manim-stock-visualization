@@ -91,7 +91,7 @@ def add_bar_names(ax: BarChart, bar_names: Sequence[str]):
     """
     val_range = np.arange(0.5, len(bar_names), 1)
     labels = VGroup()
-    for i, (value, bar_name) in enumerate(zip(val_range, bar_names)):
+    for i, (value, bar_name) in enumerate(zip(val_range, bar_names, strict=True)):
         direction = UP if ax.values[i] < 0 else DOWN
         bar_name_label = ax.x_axis.label_constructor(bar_name)
 
@@ -154,4 +154,4 @@ def add_bar_values(
     else:
         y_labels = np.fix(y_labels).astype(np.int32)
 
-    ax.y_axis.add_labels(dict(zip(ax.y_axis.get_tick_range(), y_labels)))
+    ax.y_axis.add_labels(dict(zip(ax.y_axis.get_tick_range(), y_labels, strict=True)))

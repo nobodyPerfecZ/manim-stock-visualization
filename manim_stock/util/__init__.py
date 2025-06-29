@@ -37,7 +37,6 @@ from manim_stock.util.tex import (
 )
 from manim_stock.util.title import create_title
 
-
 __all__ = [
     "AXES_FONT_SIZE",
     "DOT_RADIUS",

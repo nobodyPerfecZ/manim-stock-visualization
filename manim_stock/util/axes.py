@@ -95,7 +95,7 @@ def add_x_labels_range(
     else:
         x_labels = np.fix(x_labels).astype(np.int32)
 
-    ax.x_axis.add_labels(dict(zip(ax.x_axis.get_tick_range(), x_labels)))
+    ax.x_axis.add_labels(dict(zip(ax.x_axis.get_tick_range(), x_labels, strict=False)))
 
 
 def add_x_labels_custom(
@@ -134,7 +134,7 @@ def add_x_labels_custom(
     else:
         x_labels = np.fix(x_labels).astype(np.int32)
 
-    ax.x_axis.add_labels(dict(zip(ax.x_axis.get_tick_range(), x_labels)))
+    ax.x_axis.add_labels(dict(zip(ax.x_axis.get_tick_range(), x_labels, strict=False)))
 
 
 def remove_y_labels(ax: Axes):
@@ -178,7 +178,7 @@ def add_y_labels_range(
     else:
         y_labels = np.fix(y_labels).astype(np.int32)
 
-    ax.y_axis.add_labels(dict(zip(ax.y_axis.get_tick_range(), y_labels)))
+    ax.y_axis.add_labels(dict(zip(ax.y_axis.get_tick_range(), y_labels, strict=False)))
 
 
 def add_y_labels_custom(
@@ -216,4 +216,4 @@ def add_y_labels_custom(
     else:
         y_labels = np.fix(y_labels).astype(np.int32)
 
-    ax.y_axis.add_labels(dict(zip(ax.y_axis.get_tick_range(), y_labels)))
+    ax.y_axis.add_labels(dict(zip(ax.y_axis.get_tick_range(), y_labels, strict=False)))
